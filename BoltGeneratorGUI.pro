@@ -15,11 +15,26 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += \
+    /usr/include/opencascade
+
 SOURCES += \
+    bolt.cpp \
+    convert.cpp \
+    cut.cpp \
+    dimensions.cpp \
+    export.cpp \
+    hexagon.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
+    bolt.h \
+    convert.h \
+    cut.h \
+    dimensions.h \
+    export.h \
+    hexagon.h \
     mainwindow.h
 
 FORMS += \
@@ -29,3 +44,18 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+unix|win32: LIBS += \
+    -lTKernel \
+    -lTKBRep \
+    -lTKBO \
+    -lTKFillet \
+    -lTKG2d \
+    -lTKG3d \
+    -lTKGeomBase \
+    -lTKMath \
+    -lTKOffset \
+    -lTKPrim \
+    -lTKSTEP \
+    -lTKTopAlgo \
+    -lTKXSBase

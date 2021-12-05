@@ -96,7 +96,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="QLineEdit" name="lineEdit"/>
+     <widget class="QLineEdit" name="textLength"/>
     </item>
     <item row="2" column="2">
      <widget class="QRadioButton" name="radioInch">
@@ -108,6 +108,9 @@
       </property>
       <property name="text">
        <string>inch</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
      </widget>
     </item>

@@ -161,6 +161,7 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <addaction name="actionDirectory"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -187,6 +188,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>About...</string>
+   </property>
+  </action>
+  <action name="actionDirectory">
+   <property name="text">
+    <string>Set Output Directory...</string>
    </property>
   </action>
  </widget>

@@ -12,11 +12,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->labelLogo->setPixmap(QString("/home/samjacobs/Pictures/ScimulateLogoFull.svg"));
     ui->labelLogo->setScaledContents(true);
 
-    ui->cboxThread->insertItems(0, dimensions.GetThreads());
-    ui->cboxHead->insertItems(0, dimensions.GetHeads());
+    ui->cboxThread->insertItems(0, dimensions.Threads());
+    ui->cboxHead->insertItems(0, dimensions.Heads());
 
+    directory = QDir::home();
+
+    //connect(ui->cboxThread, &QComboBox::, this, &MainWindow::ClearStatus);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::About);
     connect(ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
+    connect(ui->actionDirectory, &QAction::triggered, this, &MainWindow::SetCurrentDirectory);
+    connect(ui->actionExit, &QAction::triggered, qApp, &QApplication::closeAllWindows);
     connect(ui->pushExport, &QPushButton::clicked, this, &MainWindow::Export);
 
     ui->statusbar->showMessage("Ready!");
@@ -50,10 +55,24 @@ void MainWindow::Export()
     {
         ui->statusbar->clearMessage();
 
-        Bolt bolt = Bolt(ui->cboxThread->currentIndex(),
-                         ui->cboxHead->currentIndex(),
+        Bolt bolt = Bolt(ui->cboxHead->currentIndex(),
+                         ui->cboxThread->currentIndex(),
                          length);
 
+        QString file = dimensions.Prefix(ui->cboxThread->currentIndex());
+        file += ".step";
+
+        ExportSTEP(bolt.Solid(), (directory.absolutePath()
+                                  + QDir::toNativeSeparators("/")
+                                  + file).toStdString().c_str());
+        ui->statusbar->showMessage("Export Complete! (" + file, 5000);
+
+        //QStringList filename;
+        //filename.append(QFileDialog::getExistingDirectory());
+        //filename.append(dimensions.Prefix(ui->cboxThread->currentIndex()));
+        //ui->statusbar->showMessage(filename.join(""));
+
+        /*
         QFileDialog dialog;
         dialog.setDefaultSuffix(QString("step"));
         QString file = dialog.getSaveFileName(this,
@@ -82,43 +101,20 @@ void MainWindow::Export()
         {
             ui->statusbar->showMessage("Invalid file format.");
         }
+        */
     }
     else
     {
         ui->statusbar->showMessage("Invalid configuration.");
     }
-    /*
-    if(table->rowCount() > 0)
-    {
-        QString file = QFileDialog::getSaveFileName(this);
-        QStringList fileParts = file.split('/');
-        fileParts = fileParts.at(fileParts.length()-1).split('.');
-        const QString extension = fileParts.at(fileParts.length()-1);
-
-        if(file.length() > 0)
-        {
-            if(!QString::compare(extension, "brep", Qt::CaseInsensitive))
-            {
-                ProcessTable();
-                ExportBRep(Assembly(bodies).Compound(), file.toStdString().c_str());
-                ui->statusbar->showMessage("Export complete!");
-            }
-            else if(!QString::compare(extension, "step", Qt::CaseInsensitive))
-            {
-                ProcessTable();
-                ExportSTEP(Assembly(bodies).Compound(), file.toStdString().c_str());
-                ui->statusbar->showMessage("Export complete!");
-            }
-            else
-            {
-                ui->statusbar->showMessage("Invalid file type. Must be STEP or BRep.");
-            }
-        }
-        else
-            ui->statusbar->showMessage("Export cancelled.");
-    }
-    else
-        ui->statusbar->showMessage("There is nothing to export.");
-    */
 }
 
+void MainWindow::SetCurrentDirectory()
+{
+    directory = QFileDialog::getExistingDirectory(this, tr("Set Output Directory..."));
+}
+
+void MainWindow::ClearStatus()
+{
+    ui->statusbar->clearMessage();
+}

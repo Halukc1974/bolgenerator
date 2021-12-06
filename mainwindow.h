@@ -24,10 +24,20 @@ public:
 
 private slots:
     void About();
+    //void Exit();
     void Export();
+    void SetCurrentDirectory();
+    void ClearStatus();
+
+    //void on_actionExit_triggered();
+
+    //void on_actionAbout_Qt_triggered();
+
+    //void on_actionAbout_triggered();
 
 private:
     Ui::MainWindow *ui;
     Dimensions dimensions;
+    QDir directory;
 };
 #endif // MAINWINDOW_H

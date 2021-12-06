@@ -55,24 +55,37 @@ void MainWindow::Export()
     {
         ui->statusbar->clearMessage();
 
+        QString file = dimensions.Prefix(ui->cboxThread->currentIndex());
+        file += QString::number(length).split(".").join("");
+
+        if(ui->radioInch->isChecked())
+        {
+            file += "IN";
+            length = inchTOmeter(length);
+        }
+        else
+        {
+            file += "MM";
+            length = milliTOmeter(length);
+        }
+
         Bolt bolt = Bolt(ui->cboxHead->currentIndex(),
                          ui->cboxThread->currentIndex(),
                          length);
 
-        QString file = dimensions.Prefix(ui->cboxThread->currentIndex());
-        file += ".step";
+        file += "_" + ui->cboxHead->currentText() + ".step";
 
         ExportSTEP(bolt.Solid(), (directory.absolutePath()
                                   + QDir::toNativeSeparators("/")
                                   + file).toStdString().c_str());
-        ui->statusbar->showMessage("Export Complete! (" + file, 5000);
-
-        //QStringList filename;
-        //filename.append(QFileDialog::getExistingDirectory());
-        //filename.append(dimensions.Prefix(ui->cboxThread->currentIndex()));
-        //ui->statusbar->showMessage(filename.join(""));
+        ui->statusbar->showMessage("Export Complete! (" + file + ")", 5000);
 
         /*
+        QStringList filename;
+        filename.append(QFileDialog::getExistingDirectory());
+        filename.append(dimensions.Prefix(ui->cboxThread->currentIndex()));
+        ui->statusbar->showMessage(filename.join(""));
+
         QFileDialog dialog;
         dialog.setDefaultSuffix(QString("step"));
         QString file = dialog.getSaveFileName(this,

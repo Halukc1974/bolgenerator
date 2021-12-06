@@ -177,7 +177,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionExit">
    <property name="text">
-    <string>&amp;Exit</string>
+    <string>&amp;Exit...</string>
    </property>
   </action>
   <action name="actionAbout_Qt">

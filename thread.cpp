@@ -11,9 +11,22 @@ TopoDS_Solid Thread(double diameter,
 {
     std::vector<gp_Pnt> vertex;
     if(external)
+        /*
+        vertex = {gp_Pnt(0.5*(diameter+pitch), 0.0, 0.0),
+                  gp_Pnt(0.5*(diameter-pitch), 0.0, 0.5*pitch),
+                  gp_Pnt(0.5*(diameter-pitch), 0.0, -0.5*pitch)};
+        */
+
         vertex = {gp_Pnt(0.5*(diameter-pitch), 0.0, 0.0),
                   gp_Pnt(0.5*(diameter+pitch), 0.0, 0.5*pitch),
                   gp_Pnt(0.5*(diameter+pitch), 0.0, -0.5*pitch)};
+
+        /*
+        vertex = {gp_Pnt(0.5*diameter-0.25*pitch, 0.0, -0.375*pitch),
+                  gp_Pnt(0.5*diameter-0.25*pitch, 0.0, 0.375*pitch),
+                  gp_Pnt(0.5*diameter+0.375*pitch, 0.0, 0.0625*pitch),
+                  gp_Pnt(0.5*diameter+0.375*pitch, 0.0, -0.0625*pitch)};
+        */
     else
         vertex = {gp_Pnt(0.5*(diameter+pitch), 0.0, 0.0),
                   gp_Pnt(0.5*(diameter-pitch), 0.0, 0.5*pitch),

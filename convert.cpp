@@ -13,7 +13,13 @@ double radTOdeg(double rad)
 {
     return 180.0/M_PI*rad;
 }
+
 double inchTOmeter(double inch)
 {
     return 2.54e-2*inch;
+}
+
+double milliTOmeter(double milli)
+{
+    return 1.0e-3*milli;
 }

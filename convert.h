@@ -10,5 +10,6 @@
 double degTOrad(double deg);
 double radTOdeg(double rad);
 double inchTOmeter(double inch);
+double milliTOmeter(double milli);
 
 #endif

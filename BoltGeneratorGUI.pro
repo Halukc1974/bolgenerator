@@ -20,22 +20,28 @@ INCLUDEPATH += \
 
 SOURCES += \
     bolt.cpp \
+    chamfer.cpp \
     convert.cpp \
     cut.cpp \
     dimensions.cpp \
     export.cpp \
+    helix.cpp \
     hexagon.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    thread.cpp
 
 HEADERS += \
     bolt.h \
+    chamfer.h \
     convert.h \
     cut.h \
     dimensions.h \
     export.h \
+    helix.h \
     hexagon.h \
-    mainwindow.h
+    mainwindow.h \
+    thread.h
 
 FORMS += \
     mainwindow.ui

@@ -11,12 +11,13 @@ public:
     Dimensions();
     double Major(int);
     double Pitch(int);
-    QStringList GetThreads();
-    QStringList GetHeads();
+    QString Prefix(int);
+    QStringList Threads();
+    QStringList Heads();
     QList<double> GetHeadDims(int, int);
 
 private:
-    QStringList threads, heads;
+    QStringList threads, heads, prefix;
     QList<double> majors, pitches;
     QList<QList<double>> hex, shcs;
 };

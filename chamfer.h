@@ -16,6 +16,8 @@
 #include <gp_Pnt.hxx>
 #include <vector>
 
+#include "export.h"
+
 TopoDS_Solid Chamfer(std::vector<gp_Pnt> points);
 
 #endif

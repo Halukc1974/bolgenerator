@@ -8,7 +8,7 @@ Bolt::Bolt(int indexHead,
     //body = Head(indexHead, indexThread);
     TopExp_Explorer map(BRepAlgoAPI_Fuse(Shank(indexThread, length, simple),
                                          Head(indexHead, indexThread)),
-                                         TopAbs_SOLID);
+                        TopAbs_SOLID);
     body = TopoDS::Solid(map.Current());
 }
 
@@ -51,25 +51,27 @@ TopoDS_Solid Bolt::Head(int indexHead, int indexThread)
 
 TopoDS_Solid Bolt::Shank(int indexThread, double length, bool simple)
 {
-    TopoDS_Solid mask, shank, thread;
+    TopoDS_Solid mask, shank, thread, fullshank;
     gp_Trsf offset;
 
     double major = dimensions.Major(indexThread);
     double pitch = dimensions.Pitch(indexThread);
 
+    //    double coeff = 10.0;
+    //    while(coeff*pitch <= length+2*pitch)
+    //        coeff += 10;
+
+    //double modlength = 10*ceil(length/pitch/10)*pitch;
+    double modlength = 10*pitch;
+
     // Add +2*pitch so that the geometry can be cleaned at both ends
-    shank = BRepPrimAPI_MakeCylinder(0.5*major, pitch);//length+2*pitch);
+    shank = BRepPrimAPI_MakeCylinder(0.5*major, modlength+2*pitch);
 
     if(!simple)
     {
-        thread = Thread(major-2.0*3.0/8.0*pitch, pitch, 2*pitch, true);//length+2*pitch, true);
-
-        ExportBRep(shank, "shank.brep");
-        ExportBRep(thread, "thread.brep");
-        //shank = TopoDS::Solid(BRepAlgoAPI_Fuse(shank, thread));
+        thread = Thread(major-2.0*3.0/8.0*pitch, pitch, modlength+2*pitch, true);
         shank = Cut(shank, thread);
     }
-    ExportBRep(shank, "cut.brep");
 
     // Remove head-side partial thread
     mask = BRepPrimAPI_MakeCylinder(major, 2*pitch).Solid();
@@ -77,23 +79,70 @@ TopoDS_Solid Bolt::Shank(int indexThread, double length, bool simple)
     shank = Cut(shank, BRepBuilderAPI_Transform(mask, offset).Shape());
 
     // Remove end-side partial thread
-    offset.SetTranslation(gp_Vec(0.0, 0.0, length+pitch));
+    offset.SetTranslation(gp_Vec(0.0, 0.0, modlength+pitch));
     shank = Cut(shank, BRepBuilderAPI_Transform(mask, offset).Shape());
+
+    fullshank = shank;
+    int ct = 1;
+    while(ct*modlength <= length)
+    {
+        offset.SetTranslation(gp_Vec(0.0, 0.0, ct*modlength));
+        fullshank = TopoDS::Solid(TopExp_Explorer(BRepAlgoAPI_Fuse(fullshank, TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset).Shape())), TopAbs_SOLID).Current());
+        ct++;
+    }
+    /*
+    offset.SetTranslation(gp_Vec(0.0, 0.0, modlength));
+    TopExp_Explorer map(BRepAlgoAPI_Fuse(fullshank,
+                                         TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset).Shape())),
+                        TopAbs_SOLID);
+    fullshank = TopoDS::Solid(map.Current());
+
+    offset.SetTranslation(gp_Vec(0.0, 0.0, 2*modlength));
+    //TopExp_Explorer map(BRepAlgoAPI_Fuse(fullshank,
+    //                                     TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset).Shape())),
+    //                    TopAbs_SOLID);
+    //fullshank = TopoDS::Solid(map.Current());
+    */
+
+
+    /*
+    fullshank = shank;
+    int coeff;
+    for(coeff = 1; coeff*pitch < length; coeff+=5)
+    {
+        offset.SetTranslation(gp_Vec(0.0, 0.0, pitch*coeff));
+        TopExp_Explorer map(BRepAlgoAPI_Fuse(fullshank,
+                                             TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset).Shape())),
+                            TopAbs_SOLID);
+        fullshank = TopoDS::Solid(map.Current());
+    }
+    */
+
+    ExportBRep(fullshank, "/home/samjacobs/Documents/CAD/shank.brep");
 
     // Currently the shank is floating off of the origin by dz=pitch.
     offset.SetTranslation(gp_Vec(0.0, 0.0, -pitch));
-    shank = TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset));
+    fullshank = TopoDS::Solid(BRepBuilderAPI_Transform(fullshank, offset));
 
     double x[] = {0.5*major-pitch,
                   major};
     double z[] = {length,
                   length-major};
 
+    /*
     std::vector<gp_Pnt> points = {gp_Pnt(x[0], 0.0, z[0]),
                                   gp_Pnt(x[1], 0.0, z[0]),
                                   gp_Pnt(x[1], 0.0, z[1])};
+    */
 
-    shank = Cut(shank, Chamfer(points));
 
-    return shank;
+    std::vector<gp_Pnt> points = {gp_Pnt(0.0, 0.0, z[0]),
+                                  gp_Pnt(x[0], 0.0, z[0]),
+                                  gp_Pnt(x[1], 0.0, z[1]),
+                                  gp_Pnt(x[1], 0.0, z[0]+modlength),
+                                  gp_Pnt(0.0, 0.0, z[0]+modlength)};
+
+    fullshank = Cut(fullshank, Chamfer(points));
+
+    return fullshank;
 }

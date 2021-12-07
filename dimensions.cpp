@@ -18,6 +18,7 @@ Dimensions::Dimensions()
     prefix.append("UN_0250_28_");
     majors.append(inchTOmeter(0.250));
     pitches.append(inchTOmeter(1.0/28.0));
+    //pitches.append(inchTOmeter(0.035714));
     hex.append(QList<double>({inchTOmeter(11.0/64.0), inchTOmeter(7.0/16.0)}));
 
     threads.append("1/4\"-32 UNEF");
@@ -48,7 +49,25 @@ Dimensions::Dimensions()
     prefix.append("M_05_080_");
     majors.append(5.0e-3);
     pitches.append(0.8e-3);
-    hex.append(QList<double>({8.0e-3, 3.5e-3}));
+    hex.append(QList<double>({3.5e-3, 8.0e-3}));
+
+    threads.append("M5x1.0");
+    prefix.append("M_05_100_");
+    majors.append(5.0e-3);
+    pitches.append(1.0e-3);
+    hex.append(QList<double>({3.5e-3, 8.0e-3}));
+
+    threads.append("M10x1.5");
+    prefix.append("M_10_150_");
+    majors.append(10.0e-3);
+    pitches.append(1.5e-3);
+    hex.append(QList<double>({6.4e-3, 17e-3}));
+
+    threads.append("M50x8.0");
+    prefix.append("M_50_800_");
+    majors.append(5.0e-2);
+    pitches.append(0.8e-2);
+    hex.append(QList<double>({3.5e-2, 8.0e-2}));
 
     heads.append("Head Type");
     heads.append("HEX");

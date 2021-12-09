@@ -1,36 +1,31 @@
 /*
-    Copyright (c) 2021 Scimulate LLC <solvers@scimulate.com>
+    This file is part of BoltGenerator.
+
+    BoltGenerator is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    BoltGenerator is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with BoltGenerator.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "thread.h"
 
-TopoDS_Solid Thread(double diameter,
+TopoDS_Solid Thread(double diameter, // Pitch Diameter
                     double pitch,
-                    double length,
-                    bool external)
+                    double length)
 {
     std::vector<gp_Pnt> vertex;
-    if(external)
-        /*
-        vertex = {gp_Pnt(0.5*(diameter+pitch), 0.0, 0.0),
-                  gp_Pnt(0.5*(diameter-pitch), 0.0, 0.5*pitch),
-                  gp_Pnt(0.5*(diameter-pitch), 0.0, -0.5*pitch)};
-        */
-
-        vertex = {gp_Pnt(0.5*(diameter-pitch), 0.0, 0.0),
-                  gp_Pnt(0.5*(diameter+pitch), 0.0, 0.5*pitch),
-                  gp_Pnt(0.5*(diameter+pitch), 0.0, -0.5*pitch)};
-
-        /*
-        vertex = {gp_Pnt(0.5*diameter-0.25*pitch, 0.0, -0.375*pitch),
-                  gp_Pnt(0.5*diameter-0.25*pitch, 0.0, 0.375*pitch),
-                  gp_Pnt(0.5*diameter+0.375*pitch, 0.0, 0.0625*pitch),
-                  gp_Pnt(0.5*diameter+0.375*pitch, 0.0, -0.0625*pitch)};
-        */
-    else
-        vertex = {gp_Pnt(0.5*(diameter+pitch), 0.0, 0.0),
-                  gp_Pnt(0.5*(diameter-pitch), 0.0, 0.5*pitch),
-                  gp_Pnt(0.5*(diameter-pitch), 0.0, -0.5*pitch)};
+    vertex = {gp_Pnt(0.5*diameter-0.25*pitch, 0.0, -0.125*pitch),
+              gp_Pnt(0.5*diameter-0.25*pitch, 0.0, 0.125*pitch),
+              gp_Pnt(0.5*diameter+0.5*pitch, 0.0, 0.5*pitch),
+              gp_Pnt(0.5*diameter+0.5*pitch, 0.0, -0.5*pitch)};
 
     // Build a wire profile by connecting the dots.
     BRepBuilderAPI_MakeWire wire;
@@ -38,5 +33,5 @@ TopoDS_Solid Thread(double diameter,
         wire.Add(BRepBuilderAPI_MakeEdge(vertex.at(ct),
                                          vertex.at((ct+1)%vertex.size())).Edge());
 
-   return Helix(wire, diameter, pitch, length);
+    return Helix(wire, diameter, pitch, length);
 }

@@ -1,3 +1,20 @@
+/*
+    This file is part of BoltGenerator.
+
+    BoltGenerator is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    BoltGenerator is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with BoltGenerator.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "dimensions.h"
 
 Dimensions::Dimensions()
@@ -7,6 +24,24 @@ Dimensions::Dimensions()
     majors.append(-1);
     pitches.append(-1);
     hex.append(QList<double>({0, 0}));
+
+    threads.append("#08-32 UNC");
+    prefix.append("UN_No08_32_");
+    majors.append(inchTOmeter(0.164));
+    pitches.append(inchTOmeter(1.0/32.0));
+    hex.append(QList<double>({inchTOmeter(7.0/64.0), inchTOmeter(1.0/4.0)}));
+
+    threads.append("#10-24 UNC");
+    prefix.append("UN_No10_24_");
+    majors.append(inchTOmeter(0.190));
+    pitches.append(inchTOmeter(1.0/24.0));
+    hex.append(QList<double>({inchTOmeter(1.0/8.0), inchTOmeter(5.0/16.0)}));
+
+    threads.append("#10-32 UNF");
+    prefix.append("UN_No10_32_");
+    majors.append(inchTOmeter(0.190));
+    pitches.append(inchTOmeter(1.0/32.0));
+    hex.append(QList<double>({inchTOmeter(1.0/8.0), inchTOmeter(5.0/16.0)}));
 
     threads.append("1/4\"-20 UNC");
     prefix.append("UN_0250_20_");
@@ -18,7 +53,6 @@ Dimensions::Dimensions()
     prefix.append("UN_0250_28_");
     majors.append(inchTOmeter(0.250));
     pitches.append(inchTOmeter(1.0/28.0));
-    //pitches.append(inchTOmeter(0.035714));
     hex.append(QList<double>({inchTOmeter(11.0/64.0), inchTOmeter(7.0/16.0)}));
 
     threads.append("1/4\"-32 UNEF");
@@ -63,15 +97,8 @@ Dimensions::Dimensions()
     pitches.append(1.5e-3);
     hex.append(QList<double>({6.4e-3, 17e-3}));
 
-    threads.append("M50x8.0");
-    prefix.append("M_50_800_");
-    majors.append(5.0e-2);
-    pitches.append(0.8e-2);
-    hex.append(QList<double>({3.5e-2, 8.0e-2}));
-
     heads.append("Head Type");
     heads.append("HEX");
-    //heads.append("SHCS");
 }
 
 double Dimensions::Major(int index)

@@ -1,5 +1,18 @@
 /*
-    Copyright (c) 2021 Scimulate LLC <solvers@scimulate.com>
+    This file is part of BoltGenerator.
+
+    BoltGenerator is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    BoltGenerator is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with BoltGenerator.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #ifndef EXPORT_H
@@ -8,11 +21,9 @@
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepTools.hxx>
 #include <STEPControl_Writer.hxx>
+#include <Standard_CString.hxx>
 #include <TopoDS_Shape.hxx>
 #include <gp_Trsf.hxx>
-
-//#include <Interface_Static.hxx>   // Unnecessary with current solution
-//#include <Standard_Integer.hxx>   // Unnecessary with current solution
 
 void ExportBRep(TopoDS_Shape shape,
                 Standard_CString filename);

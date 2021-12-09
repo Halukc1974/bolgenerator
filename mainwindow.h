@@ -1,9 +1,26 @@
+/*
+    This file is part of BoltGenerator.
+
+    BoltGenerator is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    BoltGenerator is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with BoltGenerator.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QStringList>
+#include <QString>
 #include <QMainWindow>
 
 #include "bolt.h"
@@ -23,17 +40,9 @@ public:
     ~MainWindow();
 
 private slots:
-    void About();
-    //void Exit();
+    void License();
     void Export();
-    void SetCurrentDirectory();
-    void ClearStatus();
-
-    //void on_actionExit_triggered();
-
-    //void on_actionAbout_Qt_triggered();
-
-    //void on_actionAbout_triggered();
+    void CurrentDirectory();
 
 private:
     Ui::MainWindow *ui;

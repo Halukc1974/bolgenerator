@@ -1,3 +1,20 @@
+/*
+    This file is part of BoltGenerator.
+
+    BoltGenerator is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    BoltGenerator is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with BoltGenerator.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -6,21 +23,19 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    directory = QDir::home();
 
     // Setup Logos
-    MainWindow::setWindowIcon(QIcon(QString("/home/samjacobs/Pictures/Scimulate.svg")));
-    ui->labelLogo->setPixmap(QString("/home/samjacobs/Pictures/ScimulateLogoFull.svg"));
+    MainWindow::setWindowIcon(QIcon(directory.absolutePath() + QString("/Pictures/Scimulate.svg")));
+    ui->labelLogo->setPixmap(directory.absolutePath() + QString("/Pictures/ScimulateLogoFull.svg"));
     ui->labelLogo->setScaledContents(true);
 
     ui->cboxThread->insertItems(0, dimensions.Threads());
     ui->cboxHead->insertItems(0, dimensions.Heads());
 
-    directory = QDir::home();
-
-    //connect(ui->cboxThread, &QComboBox::, this, &MainWindow::ClearStatus);
-    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::About);
+    connect(ui->actionLicense, &QAction::triggered, this, &MainWindow::License);
     connect(ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
-    connect(ui->actionDirectory, &QAction::triggered, this, &MainWindow::SetCurrentDirectory);
+    connect(ui->actionDirectory, &QAction::triggered, this, &MainWindow::CurrentDirectory);
     connect(ui->actionExit, &QAction::triggered, qApp, &QApplication::closeAllWindows);
     connect(ui->pushExport, &QPushButton::clicked, this, &MainWindow::Export);
 
@@ -30,14 +45,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-void MainWindow::About()
-{
-    QMessageBox::about(this, tr("About Application"),
-                       tr("<b>BoltGenerator</b> is an automated CAD assistant "
-                          "which produces standard-size 3D bolts per ISO and "
-                          "ASME specifications."));
 }
 
 void MainWindow::Export()
@@ -56,65 +63,36 @@ void MainWindow::Export()
         ui->statusbar->clearMessage();
 
         QString file = dimensions.Prefix(ui->cboxThread->currentIndex());
-        file += QString::number(length).split(".").join("");
+        file += ui->cboxHead->currentText()
+                + "_" +
+                QString::number(1.0e-3*length, 'e', 3).split(".").join("");
 
+        QString unit;
         if(ui->radioInch->isChecked())
         {
-            file += "IN";
+            unit = "in";
             length = inchTOmeter(length);
         }
         else
         {
-            file += "MM";
+            unit = "mm";
             length = milliTOmeter(length);
         }
+        file += unit;
 
         Bolt bolt = Bolt(ui->cboxHead->currentIndex(),
                          ui->cboxThread->currentIndex(),
                          length);
 
-        file += "_" + ui->cboxHead->currentText() + ".step";
+        file += ".step";
 
         ExportSTEP(bolt.Solid(), (directory.absolutePath()
                                   + QDir::toNativeSeparators("/")
                                   + file).toStdString().c_str());
-        ui->statusbar->showMessage("Export Complete! (" + file + ")", 5000);
 
-        /*
-        QStringList filename;
-        filename.append(QFileDialog::getExistingDirectory());
-        filename.append(dimensions.Prefix(ui->cboxThread->currentIndex()));
-        ui->statusbar->showMessage(filename.join(""));
-
-        QFileDialog dialog;
-        dialog.setDefaultSuffix(QString("step"));
-        QString file = dialog.getSaveFileName(this,
-                                              tr("Save File"),
-                                              NULL,
-                                              tr("STEP Files (*.step);;"
-                                                 "BRep Files (*.brep)"));
-        QFileInfo f = QFileInfo(file);
-        if(f.suffix().isEmpty())
-        {
-            file += "." + dialog.defaultSuffix();
-            f = QFileInfo(file);
-        }
-
-        if(!QString::compare(f.suffix(), "brep", Qt::CaseInsensitive))
-        {
-            ExportBRep(bolt.Solid(), file.toStdString().c_str());
-            ui->statusbar->showMessage("Export complete!");
-        }
-        else if(!QString::compare(f.suffix(), "step", Qt::CaseInsensitive))
-        {
-            ExportSTEP(bolt.Solid(), file.toStdString().c_str());
-            ui->statusbar->showMessage("Export complete!");
-        }
-        else
-        {
-            ui->statusbar->showMessage("Invalid file format.");
-        }
-        */
+        ui->statusbar->showMessage("Success! (" + ui->cboxThread->currentText()
+                                   + " " + ui->cboxHead->currentText() + ", L="
+                                   + ui->textLength->text() + unit + ")", 5000);
     }
     else
     {
@@ -122,12 +100,15 @@ void MainWindow::Export()
     }
 }
 
-void MainWindow::SetCurrentDirectory()
+void MainWindow::License()
 {
-    directory = QFileDialog::getExistingDirectory(this, tr("Set Output Directory..."));
+    QMessageBox::about(this,
+                       tr("License Information"),
+                       tr("<b>BoltGenerator</b> is an automated CAD assistant which produces 3D bolts per ISO and ASME specifications."
+                          "<br>Copyright (C) 2021 <a href=\"https://www.scimulate.com\">Scimulate LLC</a>"));
 }
 
-void MainWindow::ClearStatus()
+void MainWindow::CurrentDirectory()
 {
-    ui->statusbar->clearMessage();
+    directory = QFileDialog::getExistingDirectory(this, tr("Set Output Directory"));
 }

@@ -31,10 +31,6 @@
   <property name="windowTitle">
    <string>BoltGenerator v2021.0</string>
   </property>
-  <property name="windowIcon">
-   <iconset>
-    <normaloff>../../../Pictures/Scimulate.svg</normaloff>../../../Pictures/Scimulate.svg</iconset>
-  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0" colspan="4">
@@ -53,9 +49,6 @@
       </property>
       <property name="text">
        <string/>
-      </property>
-      <property name="pixmap">
-       <pixmap>../../../Pictures/ScimulateLogoFull.svg</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -168,7 +161,7 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
-    <addaction name="actionAbout"/>
+    <addaction name="actionLicense"/>
     <addaction name="actionAbout_Qt"/>
    </widget>
    <addaction name="menu"/>
@@ -185,9 +178,9 @@
     <string>About Qt...</string>
    </property>
   </action>
-  <action name="actionAbout">
+  <action name="actionLicense">
    <property name="text">
-    <string>About...</string>
+    <string>License...</string>
    </property>
   </action>
   <action name="actionDirectory">

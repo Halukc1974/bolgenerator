@@ -1,5 +1,18 @@
 /*
-    Copyright (c) 2021 Scimulate LLC <solvers@scimulate.com>
+    This file is part of BoltGenerator.
+
+    BoltGenerator is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    BoltGenerator is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with BoltGenerator.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "chamfer.h"
@@ -11,8 +24,6 @@ TopoDS_Solid Chamfer(std::vector<gp_Pnt> points)
         wire.Add(BRepBuilderAPI_MakeEdge(points.at(ct), points.at((ct+1)%points.size())));
     
     TopoDS_Face sketch = BRepBuilderAPI_MakeFace(wire);
-
-    ExportBRep(sketch, "/home/samjacobs/Documents/CAD/sketch.brep");
 
     TopoDS_Solid chamfer = TopoDS::Solid(BRepSweep_Revol(sketch,
                                          gp_Ax1(gp::Origin(),

@@ -18,6 +18,7 @@
 #ifndef CONVERT_H
 #define CONVERT_H
 
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 double degTOrad(double deg);

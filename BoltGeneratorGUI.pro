@@ -85,3 +85,6 @@ DEPENDPATH += C:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0\win64\vc14\bin
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../../../../OpenCASCADE-7.6.0-vc14-64/opencascade-7.6.0/win64/vc14/lib/TKernel.lib
 #else:win32-g++: PRE_TARGETDEPS += $$PWD/../../../../../OpenCASCADE-7.6.0-vc14-64/opencascade-7.6.0/win64/vc14/lib/libTKernel.a
+
+DISTFILES += \
+    LICENSE

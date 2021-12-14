@@ -69,7 +69,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 win32: LIBS += -LC:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0/win64/vc14/lib/ -lTKernel \
     -lTKBRep \
     -lTKBO \
-    -lTKFillet \
+#    -lTKFillet \
     -lTKG2d \
     -lTKG3d \
     -lTKGeomBase \
@@ -78,7 +78,7 @@ win32: LIBS += -LC:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0/win64/vc14/lib/ 
     -lTKPrim \
     -lTKSTEP \
     -lTKTopAlgo \
-    -lTKXSBase
+#    -lTKXSBase
 
 INCLUDEPATH += C:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0\inc
 DEPENDPATH += C:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0\win64\vc14\bin

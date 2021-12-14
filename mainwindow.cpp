@@ -1,18 +1,20 @@
 /*
-    This file is part of BoltGenerator.
+    BoltGenerator is an automated CAD assistant which produces standard-size 3D
+    bolts per ISO and ASME specifications.
+    Copyright (C) 2021  Scimulate LLC <solvers@scimulate.com>
 
-    BoltGenerator is free software: you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    BoltGenerator is distributed in the hope that it will be useful,
+    This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with BoltGenerator.  If not, see <https://www.gnu.org/licenses/>.
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "mainwindow.h"
@@ -96,7 +98,7 @@ void MainWindow::Export()
     }
     else
     {
-        ui->statusbar->showMessage("Invalid configuration.");
+        ui->statusbar->showMessage("Invalid configuration.", 2500);
     }
 }
 
@@ -104,8 +106,10 @@ void MainWindow::License()
 {
     QMessageBox::about(this,
                        tr("License Information"),
-                       tr("<b>BoltGenerator</b> is an automated CAD assistant which produces 3D bolts per ISO and ASME specifications."
-                          "<br>Copyright (C) 2021 <a href=\"https://www.scimulate.com\">Scimulate LLC</a>"));
+                       tr("<b>BoltGenerator</b> is an automated CAD assistant which produces 3D bolts per ISO and ASME specifications, built using <a href=\"https://www.opencascade.com/open-cascade-technology\">OpenCASCADE</a> and <a href=\"https://www.qt.io/\">Qt</a>."
+                          "<br><br>Copyright (C) 2021 <a href=\"https://www.scimulate.com\">Scimulate LLC</a>"
+                          "<br><br>BoltGenerator is licensed under GNU GPLv3."
+                          "<br><br>Scimulate, \"Solving The Unsolved\", and the Scimulate logos are trademarks of Scimulate LLC."));
 }
 
 void MainWindow::CurrentDirectory()

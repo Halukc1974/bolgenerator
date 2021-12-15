@@ -88,3 +88,6 @@ win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../../../../OpenCASCADE-7.6.0-vc14-
 
 DISTFILES += \
     LICENSE
+
+RESOURCES += \
+    resources.qrc

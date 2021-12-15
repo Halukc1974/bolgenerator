@@ -27,9 +27,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     directory = QDir::home();
 
-    // Setup Logos
-    MainWindow::setWindowIcon(QIcon(directory.absolutePath() + QString("/Pictures/Scimulate.svg")));
-    ui->labelLogo->setPixmap(directory.absolutePath() + QString("/Pictures/ScimulateLogoFull.svg"));
     ui->labelLogo->setScaledContents(true);
 
     ui->cboxThread->insertItems(0, dimensions.Threads());

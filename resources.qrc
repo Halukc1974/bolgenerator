@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/images">
-        <file>images/Scimulate.svg</file>
         <file>images/ScimulateLogoFull.svg</file>
     </qresource>
 </RCC>

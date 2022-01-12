@@ -29,11 +29,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>BoltGenerator v2021.0</string>
-  </property>
-  <property name="windowIcon">
-   <iconset resource="resources.qrc">
-    <normaloff>:/images/images/Scimulate.svg</normaloff>:/images/images/Scimulate.svg</iconset>
+   <string>BoltGenerator v2022.0</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">

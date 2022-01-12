@@ -104,7 +104,7 @@ void MainWindow::License()
     QMessageBox::about(this,
                        tr("License Information"),
                        tr("<b>BoltGenerator</b> is an automated CAD assistant which produces 3D bolts per ISO and ASME specifications, built using <a href=\"https://www.opencascade.com/open-cascade-technology\">OpenCASCADE</a> and <a href=\"https://www.qt.io/\">Qt</a>."
-                          "<br><br>Copyright (C) 2021 <a href=\"https://www.scimulate.com\">Scimulate LLC</a>"
+                          "<br><br>Copyright (C) 2021-2022 <a href=\"https://www.scimulate.com\">Scimulate LLC</a>"
                           "<br><br>BoltGenerator is licensed under GNU GPLv3."
                           "<br><br>Scimulate, \"Solving The Unsolved\", and the Scimulate logos are trademarks of Scimulate LLC."));
 }

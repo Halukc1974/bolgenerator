@@ -28,8 +28,9 @@ TopoDS_Solid Hexagon(double aflats, double height)
     gp_Trsf trans, rot; // Used to transform a simple body to form mask
 
     BRepPrimAPI_MakeCylinder blank
-        = BRepPrimAPI_MakeCylinder(0.5*acorners, height);
-    
+        //= BRepPrimAPI_MakeCylinder(0.5*acorners, height);
+        = BRepPrimAPI_MakeCylinder(aflats, height);
+
     // Build the simple body used to construct mask
     TopoDS_Solid tool = BRepPrimAPI_MakeBox(acorners, acorners, height);
     

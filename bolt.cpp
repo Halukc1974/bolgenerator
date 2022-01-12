@@ -46,6 +46,14 @@ TopoDS_Solid Bolt::Head(int indexHead, int indexThread)
         double aflats = dimensions.GetHeadDims(indexHead, indexThread).at(1);
         output = Hexagon(aflats, thickness);
     }
+    else if(indexHead == 2) // 2 == SHCS
+    {
+        double aflats = dimensions.GetHeadDims(indexHead, indexThread).at(2);
+        double diam = dimensions.GetHeadDims(indexHead, indexThread).at(1);
+        //output = Cut(BRepPrimAPI_MakeCylinder(0.5*diam, thickness).Solid(), Hexagon(aflats, aflats));
+        output = BRepPrimAPI_MakeCylinder(0.5*diam, thickness).Solid();
+        //ExportBRep(output, "test.brep");
+    }
 
     offset.SetTranslation(gp_Vec(0.0, 0.0, -thickness));
     return TopoDS::Solid(BRepBuilderAPI_Transform(output, offset));

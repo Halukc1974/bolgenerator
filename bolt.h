@@ -28,6 +28,8 @@
 #include "hexagon.h"
 #include "thread.h"
 
+#include "export.h"
+
 class Bolt : Dimensions
 {
 public:

@@ -154,6 +154,24 @@ Dimensions::Dimensions()
                                inchTOmeter(21.0/32.0),
                                inchTOmeter(3.0/8.0)}));
 
+    threads.append("1/2\"-13 UNC");
+    prefix.append("UN_0500_13_");
+    majors.append(inchTOmeter(0.50));
+    pitches.append(inchTOmeter(1.0/13.0));
+    hex.append(QList<double>({inchTOmeter(5.0/16.0), inchTOmeter(0.75)}));
+    shcs.append(QList<double>({inchTOmeter(0.5),
+                               inchTOmeter(0.75),
+                               inchTOmeter(3.0/8.0)}));
+
+    threads.append("1/2\"-20 UNF");
+    prefix.append("UN_0500_20_");
+    majors.append(inchTOmeter(0.50));
+    pitches.append(inchTOmeter(1.0/20.0));
+    hex.append(QList<double>({inchTOmeter(11.0/32.0), inchTOmeter(0.75)}));
+    shcs.append(QList<double>({inchTOmeter(0.5),
+                               inchTOmeter(0.75),
+                               inchTOmeter(3.0/8.0)}));
+
     /* Omitted for now. Small bolts break the program.
     threads.append("M3x0.5");
     prefix.append("M_04_050e-2_");
@@ -262,4 +280,6 @@ QList<double> Dimensions::GetHeadDims(int indexHead, int indexThread)
 {
     if(indexHead == 1)
         return hex.at(indexThread);
+    else if(indexHead == 2)
+        return shcs.at(indexThread);
 }

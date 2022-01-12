@@ -15,8 +15,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-#INCLUDEPATH += \
-#    /usr/include/opencascade
+
 
 SOURCES += \
     bolt.cpp \
@@ -51,20 +50,22 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-#unix|win32: LIBS += \
-#    -lTKernel \
-#    -lTKBRep \
-#    -lTKBO \
-#    -lTKFillet \
-#    -lTKG2d \
-#    -lTKG3d \
-#    -lTKGeomBase \
-#    -lTKMath \
-#    -lTKOffset \
-#    -lTKPrim \
-#    -lTKSTEP \
-#    -lTKTopAlgo \
-#    -lTKXSBase
+unix: INCLUDEPATH += /usr/include/opencascade
+
+unix: LIBS += \
+    -lTKernel \
+    -lTKBRep \
+    -lTKBO \
+    -lTKFillet \
+    -lTKG2d \
+    -lTKG3d \
+    -lTKGeomBase \
+    -lTKMath \
+    -lTKOffset \
+    -lTKPrim \
+    -lTKSTEP \
+    -lTKTopAlgo \
+    -lTKXSBase
 
 win32: LIBS += -LC:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0/win64/vc14/lib/ -lTKernel \
     -lTKBRep \

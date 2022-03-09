@@ -38,6 +38,23 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionExit, &QAction::triggered, qApp, &QApplication::closeAllWindows);
     connect(ui->pushExport, &QPushButton::clicked, this, &MainWindow::Export);
 
+    ui->advWidget->setSource(QUrl::fromLocalFile(":/adv.qml"));
+    ui->advWidget->rootObject()->setProperty("displayMode", 1);
+    ui->advWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    QMetaObject::invokeMethod(ui->advWidget->rootObject(), "play");
+
+    //ui->advWidget->setClearColor(Qt::transparent);
+    //ui->advWidget->setProperty("displayMode", 1);
+
+    //ui->advWidget->setAttribute(Qt::WA_AlwaysStackOnTop, 1);
+    //ui->advWidget->setAttribute(Qt::WA_TranslucentBackground, 1);
+    //! [8]
+    //ui->advWidget.setSizePolicy(QSizePolicy::Expanding, 0);
+
+    //connect(ui->advWidget, SIGNAL(advertisementEnded()), this, SLOT(onAdvEnded()));
+
+    //advWidget->rootObject()->setProperty("displayMode", 1);
+
     ui->statusbar->showMessage("Ready!");
 }
 

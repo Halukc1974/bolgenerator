@@ -1,4 +1,4 @@
-QT       += core gui
+QT += core gui quickwidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,8 +14,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-
-
 
 SOURCES += \
     bolt.cpp \
@@ -56,7 +54,7 @@ unix: LIBS += \
     -lTKernel \
     -lTKBRep \
     -lTKBO \
-    -lTKFillet \
+    #-lTKFillet \
     -lTKG2d \
     -lTKG3d \
     -lTKGeomBase \
@@ -67,7 +65,8 @@ unix: LIBS += \
     -lTKTopAlgo \
     -lTKXSBase
 
-win32: LIBS += -LC:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0/win64/vc14/lib/ -lTKernel \
+win32: LIBS += -LC:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0/win64/vc14/lib/ \
+    -lTKernel \
     -lTKBRep \
     -lTKBO \
 #    -lTKFillet \

@@ -22,6 +22,7 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QQuickItem>
 #include <QString>
 #include <QMainWindow>
 

@@ -3,7 +3,7 @@ import QtDigitalAdvertising 1.0
 
 MobileAd {
     id: ad
-    width: 320; height: 100
+    width: 320; height: 250
     playMode: QtDigitalAdvertising.AutoPlay
     displayMode: QtDigitalAdvertising.Loop
     pageId: "1539335"

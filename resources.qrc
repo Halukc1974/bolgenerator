@@ -3,7 +3,6 @@
         <file>ScimulateLogoFull.svg</file>
     </qresource>
     <qresource prefix="/">
-        <file>configMobile.dat</file>
         <file>adv.qml</file>
     </qresource>
 </RCC>

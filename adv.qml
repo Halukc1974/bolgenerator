@@ -1,5 +1,14 @@
 import QtQuick 2.0
-import QtDigitalAdvertising 1.0
+import QtDigitalAdvertising 1.1
+
+Item{
+MobileConfig {
+    qdaApiKey: "B60E3B46-1318-BCB2-802B-77162E663AF6"
+    networkId: "4147"
+    siteId: "492524"
+    appName: "BoltGenerator"
+    bundleId: "scimulate.com"
+}
 
 MobileAd {
     id: ad
@@ -7,7 +16,6 @@ MobileAd {
     playMode: QtDigitalAdvertising.AutoPlay
     displayMode: QtDigitalAdvertising.Loop
     pageId: "1539335"
-    formatId: "107463 "
-    appName: "ExampleApp"
-    bundleId: "com.example.org"
+    formatId: "107463"
+}
 }

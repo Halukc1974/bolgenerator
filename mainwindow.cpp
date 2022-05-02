@@ -38,10 +38,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionExit, &QAction::triggered, qApp, &QApplication::closeAllWindows);
     connect(ui->pushExport, &QPushButton::clicked, this, &MainWindow::Export);
 
-    ui->advWidget->setSource(QUrl::fromLocalFile(":/adv.qml"));
+    //ui->advWidget->setSource(QUrl::fromLocalFile(":/adv.qml"));
     ui->advWidget->rootObject()->setProperty("displayMode", 1);
     ui->advWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    QMetaObject::invokeMethod(ui->advWidget->rootObject(), "play");
+    //QMetaObject::invokeMethod(ui->advWidget->rootObject(), "play");
 
     ui->statusbar->showMessage("Ready!");
 }

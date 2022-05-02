@@ -8,6 +8,7 @@ MobileConfig {
     siteId: "492524"
     appName: "BoltGenerator"
     bundleId: "scimulate.com"
+    width: 320; height: 250
 }
 
 MobileAd {

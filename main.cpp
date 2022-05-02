@@ -20,8 +20,11 @@
 #include <QApplication>
 #include "mainwindow.h"
 
+#include <QQuickWindow>
+
 int main(int argc, char *argv[])
 {
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
     QApplication app(argc, argv);
     MainWindow w;
     w.show();

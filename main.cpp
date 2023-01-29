@@ -24,7 +24,9 @@
 
 int main(int argc, char *argv[])
 {
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
+    //QQuickWindow::set
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Software);
+//    QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
     QApplication app(argc, argv);
     MainWindow w;
     w.show();

@@ -1,7 +1,0 @@
-module QtDigitalAdvertising
-plugin DigitalAdvertising
-classname DigitalAdvertising
-EmbeddedAd 1.0 EmbeddedAd.qml
-MobileAd 1.0 MobileAd.qml
-typeinfo plugins.qmltypes
-designersupported

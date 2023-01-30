@@ -36,7 +36,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="resources.qrc">
-    <normaloff>:/images/WindowIcon.svg</normaloff>:/images/WindowIcon.svg</iconset>
+    <normaloff>:/Proprietary Images (Copyright Scimulate LLC)/Icon.svg</normaloff>:/Proprietary Images (Copyright Scimulate LLC)/Icon.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -167,7 +167,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap resource="resources.qrc">:/images/ScimulateLogoFull.svg</pixmap>
+       <pixmap resource="resources.qrc">:/Proprietary Images (Copyright Scimulate LLC)/Logo.svg</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>

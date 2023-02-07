@@ -18,15 +18,14 @@
 */
 
 #include <QApplication>
-#include "mainwindow.h"
-
 #include <QQuickWindow>
+
+#include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
-    //QQuickWindow::set
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Software);
-//    QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
+    //QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Software);
+    //QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
     QApplication app(argc, argv);
     MainWindow w;
     w.show();

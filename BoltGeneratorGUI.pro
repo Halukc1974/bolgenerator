@@ -65,22 +65,21 @@ unix: LIBS += \
     -lTKXSBase
 
 win32: INCLUDEPATH += C:\OpenCASCADE-7.7.0-vc14-64\opencascade-7.7.0\inc
-win32: LIBS += -LC:\OpenCASCADE-7.7.0-vc14-64\opencascade-7.7.0\win64\vc14\lib\ \
+#win32: DEPENDPATH += C:\OpenCASCADE-7.7.0-vc14-64\opencascade-7.7.0\win64\vc14\bin
+#win32: LIBS += -LC:\OpenCASCADE-7.7.0-vc14-64\opencascade-7.7.0\win64\vc14\lib\ \
 #    -lTKernel \
-    -lTKBRep \
-    -lTKBO \
-#    -lTKFillet \
-    -lTKG2d \
-    -lTKG3d \
-    -lTKGeomBase \
-    -lTKMath \
-    -lTKOffset \
-    -lTKPrim \
-    -lTKSTEP \
-    -lTKTopAlgo \
-#    -lTKXSBase
-
-#DEPENDPATH += C:\OpenCASCADE-7.7.0-vc14-64\opencascade-7.7.0\win64\vc14\bin
+#    -lTKBRep \
+#    -lTKBO \
+##    -lTKFillet \
+#    -lTKG2d \
+#    -lTKG3d \
+#    -lTKGeomBase \
+#    -lTKMath \
+#    -lTKOffset \
+#    -lTKPrim \
+#    -lTKSTEP \
+#    -lTKTopAlgo \
+##    -lTKXSBase
 
 DISTFILES += \
     LICENSE

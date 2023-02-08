@@ -4,25 +4,5 @@
         <file>Proprietary Images (Copyright Scimulate LLC)/Icon.ico</file>
         <file>Proprietary Images (Copyright Scimulate LLC)/Icon.svg</file>
         <file>Proprietary Images (Copyright Scimulate LLC)/Logo.svg</file>
-        <file>dll/tbb12.dll</file>
-        <file>dll/TKBO.dll</file>
-        <file>dll/TKBool.dll</file>
-        <file>dll/TKBRep.dll</file>
-        <file>dll/TKernel.dll</file>
-        <file>dll/TKFillet.dll</file>
-        <file>dll/TKG2d.dll</file>
-        <file>dll/TKG3d.dll</file>
-        <file>dll/TKGeomAlgo.dll</file>
-        <file>dll/TKGeomBase.dll</file>
-        <file>dll/TKMath.dll</file>
-        <file>dll/TKOffset.dll</file>
-        <file>dll/TKPrim.dll</file>
-        <file>dll/TKShHealing.dll</file>
-        <file>dll/TKSTEP.dll</file>
-        <file>dll/TKSTEP209.dll</file>
-        <file>dll/TKSTEPAttr.dll</file>
-        <file>dll/TKSTEPBase.dll</file>
-        <file>dll/TKTopAlgo.dll</file>
-        <file>dll/TKXSBase.dll</file>
     </qresource>
 </RCC>

@@ -49,7 +49,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 unix: INCLUDEPATH += /usr/include/opencascade
-
 unix: LIBS += \
     -lTKernel \
     -lTKBRep \
@@ -65,8 +64,9 @@ unix: LIBS += \
     -lTKTopAlgo \
     -lTKXSBase
 
-win32: LIBS += -LC:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0/win64/vc14/lib/ \
-    -lTKernel \
+win32: INCLUDEPATH += C:\OpenCASCADE-7.7.0-vc14-64\opencascade-7.7.0\inc
+win32: LIBS += -LC:\OpenCASCADE-7.7.0-vc14-64\opencascade-7.7.0\win64\vc14\lib\ \
+#    -lTKernel \
     -lTKBRep \
     -lTKBO \
 #    -lTKFillet \
@@ -80,11 +80,7 @@ win32: LIBS += -LC:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0/win64/vc14/lib/ 
     -lTKTopAlgo \
 #    -lTKXSBase
 
-INCLUDEPATH += C:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0\inc
-DEPENDPATH += C:\OpenCASCADE-7.6.0-vc14-64\opencascade-7.6.0\win64\vc14\bin
-
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../../../../OpenCASCADE-7.6.0-vc14-64/opencascade-7.6.0/win64/vc14/lib/TKernel.lib
-#else:win32-g++: PRE_TARGETDEPS += $$PWD/../../../../../OpenCASCADE-7.6.0-vc14-64/opencascade-7.6.0/win64/vc14/lib/libTKernel.a
+#DEPENDPATH += C:\OpenCASCADE-7.7.0-vc14-64\opencascade-7.7.0\win64\vc14\bin
 
 DISTFILES += \
     LICENSE
@@ -92,4 +88,4 @@ DISTFILES += \
 RESOURCES += \
     resources.qrc
 
-RC_ICONS = Icon.ico
+#RC_ICONS = Icon.ico

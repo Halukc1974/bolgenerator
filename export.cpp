@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "fileout.h"
+#include "export.h"
 
 void ExportBRep(TopoDS_Shape shape, Standard_CString filename)
 {

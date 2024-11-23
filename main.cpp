@@ -17,17 +17,33 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "fileout.h"
+#include "export.h"
 #include <iostream>
 #include <opencascade/BRepPrimAPI_MakeCylinder.hxx>
 #include <opencascade/BRepTools.hxx>
 
+double convert_mm_m(double value)
+{
+    return 1.0e-3*value;
+}
+
 int main(int argc, char *argv[])
 {
-    std::cout << "test" << std::endl;
-    BRepPrimAPI_MakeCylinder volume = BRepPrimAPI_MakeCylinder(0.25, 1.0);
+    double majorDiam = convert_mm_m(atof(argv[2]));
+    double length = convert_mm_m(atof(argv[3]));
+    bool fraction = atof(argv[4]);
 
-    ExportBRep(volume, "new.brep");
+    if(fraction > 0.0)
+    {
+        double pitch = convert_mm_m(atof(argv[5]));
+        double pitchDiam = convert_mm_m(atof(argv[6]));
+    }
+
+    BRepPrimAPI_MakeCylinder shank = BRepPrimAPI_MakeCylinder(majorDiam, length);
+
+    //std::cout << "test" << std::endl;
+    //BRepPrimAPI_MakeCylinder volume = BRepPrimAPI_MakeCylinder(atof(argv[1]), atof(argv[2]));
+    ExportBRep(shank, "new.brep");
 
 
     //BRepTools::Write(volume.Shape(), "test.brep");

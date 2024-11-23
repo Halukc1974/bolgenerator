@@ -19,8 +19,8 @@
 
 #include "export.h"
 #include <iostream>
-#include <opencascade/BRepPrimAPI_MakeCylinder.hxx>
-#include <opencascade/BRepTools.hxx>
+#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepTools.hxx>
 
 double convert_mm_m(double value)
 {
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 {
     double majorDiam = convert_mm_m(atof(argv[2]));
     double length = convert_mm_m(atof(argv[3]));
-    bool fraction = atof(argv[4]);
+    bool fraction = atof(argv[4]);                  // thread fraction (0.0: simple, 1.0: full)
 
     if(fraction > 0.0)
     {

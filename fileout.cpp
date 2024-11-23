@@ -17,15 +17,28 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef CUT_H
-#define CUT_H
+#include "fileout.h"
 
-#include <BRepAlgoAPI_Cut.hxx>
-#include <TopExp_Explorer.hxx>
-#include <TopoDS.hxx>
-#include <TopoDS_Shape.hxx>
-#include <TopoDS_Solid.hxx>
+void ExportBRep(TopoDS_Shape shape, Standard_CString filename)
+{
+    BRepTools::Write(shape, filename);
+}
 
-TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool);
+void ExportSTEP(TopoDS_Shape shape, Standard_CString filename)
+{
+    // STEPCONTROL_Writer defaults to millimeter units, and modifying
+    // "write.step.unit" did not sucessfully translate the part.
 
-#endif
+    STEPControl_Writer writer;
+  
+    // (This didn't work.)
+    // Interface_Static::SetCVal("write.step.unit", "METER");
+    // writer.Transfer(shape, STEPControl_AsIs);
+
+    // This hack works.
+    gp_Trsf scale;
+    scale.SetScale(gp_Pnt(0,0,0), 1.0e3);
+    writer.Transfer(BRepBuilderAPI_Transform(shape, scale), STEPControl_AsIs);
+
+    writer.Write(filename);
+}

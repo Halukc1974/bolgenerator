@@ -1,8 +1,0 @@
-<RCC>
-    <qresource prefix="/images"/>
-    <qresource prefix="/">
-        <file>Proprietary Images (Copyright Scimulate LLC)/Icon.ico</file>
-        <file>Proprietary Images (Copyright Scimulate LLC)/Icon.svg</file>
-        <file>Proprietary Images (Copyright Scimulate LLC)/Logo.svg</file>
-    </qresource>
-</RCC>

@@ -17,17 +17,24 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <QApplication>
-#include <QQuickWindow>
-
-#include "mainwindow.h"
+#include "fileout.h"
+#include <iostream>
+#include <opencascade/BRepPrimAPI_MakeCylinder.hxx>
+#include <opencascade/BRepTools.hxx>
 
 int main(int argc, char *argv[])
 {
-    //QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Software);
-    //QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
-    QApplication app(argc, argv);
-    MainWindow w;
-    w.show();
-    return app.exec();
+    std::cout << "test" << std::endl;
+    BRepPrimAPI_MakeCylinder volume = BRepPrimAPI_MakeCylinder(0.25, 1.0);
+
+    ExportBRep(volume, "new.brep");
+
+
+    //BRepTools::Write(volume.Shape(), "test.brep");
+    
+    /*
+    for(int ct = 0; ct < argc; ct++)
+        std::cout << argv[ct] << "\n";
+    std::cout << argc << "\n" << argv[0] << std::endl;
+    */
 }

@@ -1,7 +1,7 @@
 /*
     BoltGenerator is an automated CAD assistant which produces standard-size 3D
     bolts per ISO and ASME specifications.
-    Copyright (C) 2021-2024  Scimulate LLC <solvers@scimulate.com>
+    Copyright (C) 2021  Scimulate LLC <solvers@scimulate.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,27 +17,31 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <BRepPrimAPI_MakeCylinder.hxx>
-#include <iostream>
+#ifndef BOLT_H
+#define BOLT_H
 
-#include "bolt.h"
-#include "convert.h"
+#include <TopoDS_Solid.hxx>
+
+#include "chamfer.h"
+#include "dimensions.h"
+#include "export.h"
+#include "hexagon.h"
+#include "thread.h"
+
 #include "export.h"
 
-int main(int argc, char *argv[])
+class Bolt : Dimensions
 {
-    std::string filename = std::string(argv[1]).append(".brep");
-    double majord = convert_mm_m(atof(argv[3]));
-    double length = convert_mm_m(atof(argv[4]));
-    bool fraction = atof(argv[5]); // thread fraction (0.0: simple, 1.0: full)
+public:
+    Bolt(int, int, double, bool=false);
+    TopoDS_Solid Solid();
 
-    if(fraction > 0.0)
-    {
-        double pitch = convert_mm_m(atof(argv[6]));
-        double pitchDiam = convert_mm_m(atof(argv[7]));
-    }
+private:
+    TopoDS_Solid Head(int, int);
+    TopoDS_Solid Shank(int, double, bool);
+    bool simple;
+    Dimensions dimensions;
+    TopoDS_Solid body;
+};
 
-
-
-    ExportBRep(BRepPrimAPI_MakeCylinder(0.5*majord, length), filename.c_str());
-}
+#endif // BOLT_H

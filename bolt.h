@@ -22,6 +22,15 @@
 
 #include <TopoDS_Solid.hxx>
 
+class Bolt
+{
+    Bolt(double, double, double);
+    TopoDS_Solid Solid();
+};
+
+/*
+#include <TopoDS_Solid.hxx>
+
 #include "chamfer.h"
 #include "dimensions.h"
 #include "export.h"
@@ -43,5 +52,6 @@ private:
     Dimensions dimensions;
     TopoDS_Solid body;
 };
+*/
 
 #endif // BOLT_H

@@ -36,8 +36,6 @@ int main(int argc, char *argv[])
         double pitch = convert_mm_m(atof(argv[6]));
         double pitchDiam = convert_mm_m(atof(argv[7]));
     }
-
-
-
+    
     ExportBRep(BRepPrimAPI_MakeCylinder(0.5*majord, length), filename.c_str());
 }

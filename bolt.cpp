@@ -19,6 +19,7 @@
 
 #include "bolt.h"
 
+/*
 Bolt::Bolt(int indexHead,
            int indexThread,
            double length,
@@ -122,3 +123,4 @@ TopoDS_Solid Bolt::Shank(int indexThread, double length, bool simple)
 
     return fullshank;
 }
+*/

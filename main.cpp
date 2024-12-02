@@ -23,23 +23,12 @@
 
 int main(int argc, char *argv[])
 {
-    std::cout << argc << std::endl;
-
     std::string filename = std::string(argv[1]).append(".brep");
     double majord = convert_mm_m(atof(argv[3]));
     double length = convert_mm_m(atof(argv[4]));
-    
-    if(argc > 3)
-    {
-        double fraction = atof(argv[5]); // thread fraction (0.0: simple, 1.0: full)
-        double pitch = convert_mm_m(atof(argv[6]));
-        double pitchd = convert_mm_m(atof(argv[7]));
-        Bolt bolt = Bolt(majord, length, fraction, pitch, pitchd);
-    }
-    else
-    {
-        Bolt bolt = Bolt(majord, length);
-    }
-
+    double fraction = atof(argv[5]); // thread fraction (0.0: simple, 1.0: full)
+    double pitch = convert_mm_m(atof(argv[6]));
+    double pitchd = convert_mm_m(atof(argv[7]));
+    //Bolt bolt = Bolt(majord, length, fraction, pitch, pitchd); 
     //ExportBRep(bolt.Solid(), std::string("Tests/").append(filename).c_str());
 }

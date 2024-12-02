@@ -17,47 +17,23 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef BOLT_H
-#define BOLT_H
-
-#include <BRepPrimAPI_MakeCylinder.hxx>
-#include <TopoDS_Solid.hxx>
-
-class Bolt
-{
-    public:
-        Bolt(double, double, double = 0.0, double = -1.0, double = -1.0);
-        TopoDS_Solid Solid();
-        //void Export()
-    
-    private:
-        TopoDS_Solid Shank(double, double);
-        TopoDS_Solid body;
-};
-
-/*
-#include <TopoDS_Solid.hxx>
-
-#include "chamfer.h"
-#include "dimensions.h"
-#include "export.h"
-#include "hexagon.h"
 #include "thread.h"
 
-#include "export.h"
-
-class Bolt : Dimensions
+TopoDS_Solid Thread(double diameter, // Pitch Diameter
+                    double pitch,
+                    double length)
 {
-public:
-    Bolt(int, int, double, bool=false);
-    TopoDS_Solid Solid();
+    std::vector<gp_Pnt> vertex;
+    vertex = {gp_Pnt(0.5*diameter-0.25*pitch, 0.0, -0.125*pitch),
+              gp_Pnt(0.5*diameter-0.25*pitch, 0.0, 0.125*pitch),
+              gp_Pnt(0.5*diameter+0.5*pitch, 0.0, 0.5*pitch),
+              gp_Pnt(0.5*diameter+0.5*pitch, 0.0, -0.5*pitch)};
 
-private:
-    TopoDS_Solid Head(int, int);
-    TopoDS_Solid Shank(int, double, bool);
-    bool simple;
-    Dimensions dimensions;
-};
-*/
+    // Build a wire profile by connecting the dots.
+    BRepBuilderAPI_MakeWire wire;
+    for(int ct = 0; ct < int(vertex.size()); ct++)
+        wire.Add(BRepBuilderAPI_MakeEdge(vertex.at(ct),
+                                         vertex.at((ct+1)%vertex.size())).Edge());
 
-#endif // BOLT_H
+    return Helix(wire, diameter, pitch, length);
+}

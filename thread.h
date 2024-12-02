@@ -17,47 +17,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef BOLT_H
-#define BOLT_H
+#ifndef THREAD_H
+#define THREAD_H
 
-#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
 #include <TopoDS_Solid.hxx>
+#include <gp_Pnt.hxx>
+#include <vector>
 
-class Bolt
-{
-    public:
-        Bolt(double, double, double = 0.0, double = -1.0, double = -1.0);
-        TopoDS_Solid Solid();
-        //void Export()
-    
-    private:
-        TopoDS_Solid Shank(double, double);
-        TopoDS_Solid body;
-};
+#include "helix.h"
 
-/*
-#include <TopoDS_Solid.hxx>
+TopoDS_Solid Thread(double diameter,
+                    double pitch,
+                    double length);
 
-#include "chamfer.h"
-#include "dimensions.h"
-#include "export.h"
-#include "hexagon.h"
-#include "thread.h"
-
-#include "export.h"
-
-class Bolt : Dimensions
-{
-public:
-    Bolt(int, int, double, bool=false);
-    TopoDS_Solid Solid();
-
-private:
-    TopoDS_Solid Head(int, int);
-    TopoDS_Solid Shank(int, double, bool);
-    bool simple;
-    Dimensions dimensions;
-};
-*/
-
-#endif // BOLT_H
+#endif // THREAD_H

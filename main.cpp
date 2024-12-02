@@ -17,25 +17,29 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <BRepPrimAPI_MakeCylinder.hxx>
-#include <iostream>
-
 #include "bolt.h"
 #include "convert.h"
 #include "export.h"
 
 int main(int argc, char *argv[])
 {
+    std::cout << argc << std::endl;
+
     std::string filename = std::string(argv[1]).append(".brep");
     double majord = convert_mm_m(atof(argv[3]));
     double length = convert_mm_m(atof(argv[4]));
-    bool fraction = atof(argv[5]); // thread fraction (0.0: simple, 1.0: full)
-
-    if(fraction > 0.0)
-    {
-        double pitch = convert_mm_m(atof(argv[6]));
-        double pitchDiam = convert_mm_m(atof(argv[7]));
-    }
     
-    ExportBRep(BRepPrimAPI_MakeCylinder(0.5*majord, length), filename.c_str());
+    if(argc > 3)
+    {
+        double fraction = atof(argv[5]); // thread fraction (0.0: simple, 1.0: full)
+        double pitch = convert_mm_m(atof(argv[6]));
+        double pitchd = convert_mm_m(atof(argv[7]));
+        Bolt bolt = Bolt(majord, length, fraction, pitch, pitchd);
+    }
+    else
+    {
+        Bolt bolt = Bolt(majord, length);
+    }
+
+    //ExportBRep(bolt.Solid(), std::string("Tests/").append(filename).c_str());
 }

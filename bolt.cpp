@@ -19,16 +19,27 @@
 
 #include "bolt.h"
 
-/*
-Bolt::Bolt(int indexHead,
-           int indexThread,
+Bolt::Bolt(double majord,
            double length,
-           bool simple)
+           double fraction,
+           double pitch,
+           double pitchd)
 {
+    body = Shank(majord, length);
+    
+
+    
+    /*
     TopExp_Explorer map(BRepAlgoAPI_Fuse(Shank(indexThread, length, simple),
                                          Head(indexHead, indexThread)),
                         TopAbs_SOLID);
     body = TopoDS::Solid(map.Current());
+    */
+}
+
+TopoDS_Solid Bolt::Shank(double majord, double length)
+{
+    return TopoDS_Solid(BRepPrimAPI_MakeCylinder(0.5*majord, length));
 }
 
 TopoDS_Solid Bolt::Solid()
@@ -36,6 +47,7 @@ TopoDS_Solid Bolt::Solid()
     return body;
 }
 
+/*
 TopoDS_Solid Bolt::Head(int indexHead, int indexThread)
 {
     TopoDS_Solid output;

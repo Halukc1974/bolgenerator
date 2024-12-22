@@ -19,16 +19,20 @@
 
 #include "bolt.h"
 
-Bolt::Bolt(double majord,
-           double length,
-           double fraction,
-           double pitch,
-           double pitchd)
-{
-    body = Shank(majord, length);
-    
+#include <iostream>
 
-    
+Bolt::Bolt(std::string head_,
+           double majord_, 
+           double length_,
+           double pitch_,
+           double pitchd_): head(head_),
+                            majord(majord_),
+                            length(length_),
+                            pitch(pitch_),
+                            pitchd(pitchd_)
+{
+    body = Shank();
+
     /*
     TopExp_Explorer map(BRepAlgoAPI_Fuse(Shank(indexThread, length, simple),
                                          Head(indexHead, indexThread)),
@@ -37,9 +41,48 @@ Bolt::Bolt(double majord,
     */
 }
 
-TopoDS_Solid Bolt::Shank(double majord, double length)
+TopoDS_Solid Bolt::Shank()
 {
-    return TopoDS_Solid(BRepPrimAPI_MakeCylinder(0.5*majord, length));
+    TopoDS_Solid mask, shank, thread, fullshank;
+    gp_Trsf offset;
+
+    // The geometry kernel has issues building threads unevenly. The applied
+    // work-around creates an integer number of complete threads, later trimmed.
+    // Add extra length (2*pitch) to clean up partial threads.
+    // Round up to nearest full thread.
+    double nthreads = std::ceil((length + 2*pitch)/pitch);
+    
+    // Start with a cylinder
+    shank = BRepPrimAPI_MakeCylinder(0.5*majord, pitch*nthreads);
+
+    // Create a 3D body of threads, cut them from the cylinder.
+    thread = Thread(majord-2.0*3.0/8.0*pitch, pitch, pitch*nthreads);
+    shank = Cut(shank, thread);
+
+    // Remove head-side partial thread
+    mask = BRepPrimAPI_MakeCylinder(majord, pitch).Solid();
+    shank = Cut(shank, mask);
+
+    // Remove end-side partial thread
+    offset.SetTranslation(gp_Vec(0.0, 0.0, length+pitch));
+    mask = BRepPrimAPI_MakeCylinder(majord, nthreads*pitch-pitch-length).Solid();
+    shank = Cut(shank, BRepBuilderAPI_Transform(mask, offset).Shape());
+
+    // Currently the shank is floating off of the origin by dz=pitch. Shift down.
+    offset.SetTranslation(gp_Vec(0.0, 0.0, -pitch));
+    shank = TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset));
+
+    // Chamfer lead-in thread
+    double x[] = {0.5*majord-pitch,
+                  majord};
+    double z[] = {length,
+                  length-0.5*majord-pitch};
+    std::vector<gp_Pnt> points = {gp_Pnt(x[0], 0.0, z[0]),
+                                  gp_Pnt(x[1], 0.0, z[0]),
+                                  gp_Pnt(x[1], 0.0, z[1])};
+    shank = Cut(shank, Chamfer(points));
+
+    return shank;
 }
 
 TopoDS_Solid Bolt::Solid()
@@ -75,64 +118,6 @@ TopoDS_Solid Bolt::Head(int indexHead, int indexThread)
 
 TopoDS_Solid Bolt::Shank(int indexThread, double length, bool simple)
 {
-    TopoDS_Solid mask, shank, thread, fullshank;
-    gp_Trsf offset;
 
-    double major = dimensions.Major(indexThread);
-    double pitch = dimensions.Pitch(indexThread);
-
-    // The geometry kernel has issues building threads unevenly. The applied
-    // work-around creates a static number of threads (10*pitch, for example).
-    // At the Chamfer()
-    double modlength = 10*pitch;
-
-    // Add +2*pitch so that the geometry can be cleaned at both ends
-    shank = BRepPrimAPI_MakeCylinder(0.5*major, modlength+2*pitch);
-
-    if(!simple)
-    {
-        thread = Thread(major-2.0*3.0/8.0*pitch, pitch, modlength+2*pitch);
-        shank = Cut(shank, thread);
-    }
-
-    // Remove head-side partial thread
-    mask = BRepPrimAPI_MakeCylinder(major, 2*pitch).Solid();
-    offset.SetTranslation(gp_Vec(0.0, 0.0, -1.0*pitch));
-    shank = Cut(shank, BRepBuilderAPI_Transform(mask, offset).Shape());
-
-    // Remove end-side partial thread
-    offset.SetTranslation(gp_Vec(0.0, 0.0, modlength+pitch));
-    shank = Cut(shank, BRepBuilderAPI_Transform(mask, offset).Shape());
-
-    // Building threads seems to fail
-    fullshank = shank;
-    int ct = 1;
-    while(ct*modlength <= length)
-    {
-        offset.SetTranslation(gp_Vec(0.0, 0.0, ct*modlength));
-        fullshank = TopoDS::Solid(TopExp_Explorer(BRepAlgoAPI_Fuse(fullshank, TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset).Shape())), TopAbs_SOLID).Current());
-        ct++;
-    }
-
-    // Currently the shank is floating off of the origin by dz=pitch.
-    offset.SetTranslation(gp_Vec(0.0, 0.0, -pitch));
-    fullshank = TopoDS::Solid(BRepBuilderAPI_Transform(fullshank, offset));
-
-    // Trim excess threaded rod beyond length
-    mask = BRepPrimAPI_MakeCylinder(major, ct*modlength).Solid();
-    offset.SetTranslation(gp_Vec(0, 0, length));
-    fullshank = Cut(fullshank, BRepBuilderAPI_Transform(mask, offset));
-
-    // Chamfer lead-in thread
-    double x[] = {0.5*major-pitch,
-                  major};
-    double z[] = {length,
-                  length-0.5*major-pitch};
-    std::vector<gp_Pnt> points = {gp_Pnt(x[0], 0.0, z[0]),
-                                  gp_Pnt(x[1], 0.0, z[0]),
-                                  gp_Pnt(x[1], 0.0, z[1])};
-    fullshank = Cut(fullshank, Chamfer(points));
-
-    return fullshank;
 }
 */

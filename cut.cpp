@@ -1,7 +1,7 @@
 /*
     BoltGenerator is an automated CAD assistant which produces standard-size 3D
     bolts per ISO and ASME specifications.
-    Copyright (C) 2021-2024  Scimulate LLC <solvers@scimulate.com>
+    Copyright (C) 2021  Scimulate LLC <solvers@scimulate.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,17 +17,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "bolt.h"
-//#include "convert.h"
-#include "export.h"
+#include "cut.h"
 
-int main(int argc, char *argv[])
+TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool)
 {
-    std::string filename = std::string(argv[1]).append(".brep");
-    Bolt bolt = Bolt(argv[2],
-                     atof(argv[3]),
-                     atof(argv[4]),
-                     atof(argv[5]),
-                     atof(argv[6])); 
-    ExportBRep(bolt.Solid(), std::string("Tests/").append(filename).c_str());
+    /*
+        BRepAlgoAPI_Cut() works well, but it returns type TopoDS_Compound. This
+        function accepts the same two arguments, but maps TopoDS_Compound for
+        TopoDS_Solid components, which (by design) only contains one solid, and
+        returns it.
+    */
+
+    TopExp_Explorer map(BRepAlgoAPI_Cut(body, tool), TopAbs_SOLID);
+    return TopoDS::Solid(map.Current());
 }

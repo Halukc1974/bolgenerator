@@ -1,7 +1,7 @@
 /*
     BoltGenerator is an automated CAD assistant which produces standard-size 3D
     bolts per ISO and ASME specifications.
-    Copyright (C) 2021-2024  Scimulate LLC <solvers@scimulate.com>
+    Copyright (C) 2021  Scimulate LLC <solvers@scimulate.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,17 +17,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "bolt.h"
-//#include "convert.h"
-#include "export.h"
+#include "chamfer.h"
 
-int main(int argc, char *argv[])
+TopoDS_Solid Chamfer(std::vector<gp_Pnt> points)
 {
-    std::string filename = std::string(argv[1]).append(".brep");
-    Bolt bolt = Bolt(argv[2],
-                     atof(argv[3]),
-                     atof(argv[4]),
-                     atof(argv[5]),
-                     atof(argv[6])); 
-    ExportBRep(bolt.Solid(), std::string("Tests/").append(filename).c_str());
+    BRepBuilderAPI_MakeWire wire;
+    for(std::size_t ct = 0; ct < points.size(); ct++)
+        wire.Add(BRepBuilderAPI_MakeEdge(points.at(ct), points.at((ct+1)%points.size())));
+    
+    TopoDS_Face sketch = BRepBuilderAPI_MakeFace(wire);
+
+    TopoDS_Solid chamfer = TopoDS::Solid(BRepSweep_Revol(sketch,
+                                         gp_Ax1(gp::Origin(),
+                                         gp::DZ())).Shape());
+
+    return chamfer;
 }

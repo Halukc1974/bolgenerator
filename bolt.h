@@ -20,18 +20,25 @@
 #ifndef BOLT_H
 #define BOLT_H
 
+#include <BRepBuilderAPI_Transform.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <gp_Trsf.hxx>
 #include <TopoDS_Solid.hxx>
+
+#include "chamfer.h"
+#include "cut.h"
+#include "thread.h"
 
 class Bolt
 {
     public:
-        Bolt(double, double, double = 0.0, double = -1.0, double = -1.0);
+        Bolt(std::string, double, double, double, double);
         TopoDS_Solid Solid();
-        //void Export()
     
     private:
-        TopoDS_Solid Shank(double, double);
+        double majord, length, pitch, pitchd;
+        std::string head;
+        TopoDS_Solid Shank();
         TopoDS_Solid body;
 };
 

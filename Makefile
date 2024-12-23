@@ -1,4 +1,4 @@
-OBJECTS = main.o bolt.o convert.o export.o thread.o helix.o cut.o chamfer.o
+OBJECTS = main.o bolt.o convert.o export.o thread.o helix.o cut.o chamfer.o hexagon.o
 CFLAGS = -I/usr/include/opencascade/ -Wall
 LDLIBS = -lTKernel -lTKBRep -lTKBO -lTKG2d -lTKG3d -lTKGeomBase -lTKMath -lTKOffset -lTKPrim -lTKSTEP -lTKTopAlgo -lTKXSBase
 
@@ -28,6 +28,9 @@ cut.o :
 
 chamfer.o :
 	g++ -c $(CFLAGS) chamfer.cpp
+
+hexagon.o :
+	g++ -c $(CFLAGS) hexagon.cpp
 
 .PHONY : clean
 clean :

@@ -21,24 +21,25 @@
 
 #include <iostream>
 
-Bolt::Bolt(std::string head_,
+Bolt::Bolt(std::string type_,
            double majord_, 
-           double length_,
            double pitch_,
-           double pitchd_): head(head_),
+           double length_,
+           double headD1_,
+           double headD2_,
+           double headD3_): type(type_),
                             majord(majord_),
-                            length(length_),
                             pitch(pitch_),
-                            pitchd(pitchd_)
+                            length(length_),
+                            headD1(headD1_), // Head Diameter
+                            headD2(headD2_), // Head Height
+                            headD3(headD3_)  // Drive Size
 {
-    body = Shank();
-
-    /*
-    TopExp_Explorer map(BRepAlgoAPI_Fuse(Shank(indexThread, length, simple),
-                                         Head(indexHead, indexThread)),
+    TopExp_Explorer map(BRepAlgoAPI_Fuse(Shank(),
+                                         Head()),
                         TopAbs_SOLID);
     body = TopoDS::Solid(map.Current());
-    */
+    
 }
 
 TopoDS_Solid Bolt::Shank()
@@ -90,9 +91,21 @@ TopoDS_Solid Bolt::Solid()
     return body;
 }
 
-/*
-TopoDS_Solid Bolt::Head(int indexHead, int indexThread)
+TopoDS_Solid Bolt::Head()
 {
+    gp_Trsf offset;
+
+    head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
+    TopoDS_Solid hexagon = Hexagon(headD3, headD3);
+
+    head = Cut(head, hexagon);
+
+    offset.SetTranslation(gp_Vec(0.0, 0.0, -headD2));
+    head = TopoDS::Solid(BRepBuilderAPI_Transform(head, offset));
+
+    return head;
+
+    /*
     TopoDS_Solid output;
     double thickness = dimensions.GetHeadDims(indexHead, indexThread).at(0);
     gp_Trsf offset;
@@ -114,10 +127,5 @@ TopoDS_Solid Bolt::Head(int indexHead, int indexThread)
 
     offset.SetTranslation(gp_Vec(0.0, 0.0, -thickness));
     return TopoDS::Solid(BRepBuilderAPI_Transform(output, offset));
+    */
 }
-
-TopoDS_Solid Bolt::Shank(int indexThread, double length, bool simple)
-{
-
-}
-*/

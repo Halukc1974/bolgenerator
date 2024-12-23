@@ -28,6 +28,8 @@ int main(int argc, char *argv[])
                      atof(argv[3]),
                      atof(argv[4]),
                      atof(argv[5]),
-                     atof(argv[6])); 
+                     atof(argv[6]),
+                     atof(argv[7]),
+                     atof(argv[8])); 
     ExportBRep(bolt.Solid(), std::string("Tests/").append(filename).c_str());
 }

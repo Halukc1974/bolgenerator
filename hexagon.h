@@ -17,57 +17,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef BOLT_H
-#define BOLT_H
+#ifndef HEXAGON_H
+#define HEXAGON_H
 
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
-#include <gp_Trsf.hxx>
+#include <BRepSweep_Revol.hxx>
+#include <TopoDS.hxx>
 #include <TopoDS_Solid.hxx>
 
-#include "chamfer.h"
 #include "cut.h"
-#include "hexagon.h"
-#include "thread.h"
 
-class Bolt
-{
-    public:
-        Bolt(std::string, double, double, double, double, double, double);
-        TopoDS_Solid Solid();
-    
-    private:
-        double majord, length, pitch, headD1, headD2, headD3;
-        std::string type;
-        TopoDS_Solid Shank();
-        TopoDS_Solid Head();
-        TopoDS_Solid body, head;
-};
+TopoDS_Solid Hexagon(double aflats, double thickness);
 
-/*
-#include <TopoDS_Solid.hxx>
-
-#include "chamfer.h"
-#include "dimensions.h"
-#include "export.h"
-#include "hexagon.h"
-#include "thread.h"
-
-#include "export.h"
-
-class Bolt : Dimensions
-{
-public:
-    Bolt(int, int, double, bool=false);
-    TopoDS_Solid Solid();
-
-private:
-    TopoDS_Solid Head(int, int);
-    TopoDS_Solid Shank(int, double, bool);
-    bool simple;
-    Dimensions dimensions;
-};
-*/
-
-#endif // BOLT_H
+#endif

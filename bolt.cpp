@@ -19,16 +19,12 @@
 
 #include "bolt.h"
 
-#include <iostream>
-
-Bolt::Bolt(std::string type_,
-           double majord_, 
+Bolt::Bolt(double majord_, 
            double pitch_,
            double length_,
            double headD1_,
            double headD2_,
-           double headD3_): type(type_),
-                            majord(majord_),
+           double headD3_): majord(majord_),
                             pitch(pitch_),
                             length(length_),
                             headD1(headD1_), // Head Diameter
@@ -39,12 +35,11 @@ Bolt::Bolt(std::string type_,
                                          Head()),
                         TopAbs_SOLID);
     body = TopoDS::Solid(map.Current());
-    
 }
 
 TopoDS_Solid Bolt::Shank()
 {
-    TopoDS_Solid mask, shank, thread, fullshank;
+    TopoDS_Solid mask, shank, thread;
     gp_Trsf offset;
 
     // The geometry kernel has issues building threads unevenly. The applied
@@ -93,39 +88,11 @@ TopoDS_Solid Bolt::Solid()
 
 TopoDS_Solid Bolt::Head()
 {
+    TopoDS_Solid head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
     gp_Trsf offset;
 
-    head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
-    TopoDS_Solid hexagon = Hexagon(headD3, headD3);
-
-    head = Cut(head, hexagon);
-
+    head = Cut(head, Hexagon(headD3, headD3));
     offset.SetTranslation(gp_Vec(0.0, 0.0, -headD2));
-    head = TopoDS::Solid(BRepBuilderAPI_Transform(head, offset));
 
-    return head;
-
-    /*
-    TopoDS_Solid output;
-    double thickness = dimensions.GetHeadDims(indexHead, indexThread).at(0);
-    gp_Trsf offset;
-
-    if(indexHead == 1) // 1 == Hex Bolt
-    {
-        double aflats = dimensions.GetHeadDims(indexHead, indexThread).at(1);
-        double acorners = 1.1*aflats;
-        TopoDS_Solid tool = Cut(BRepPrimAPI_MakeCylinder(acorners, thickness).Solid(),
-                                BRepPrimAPI_MakeCylinder(0.5*acorners, thickness).Solid());
-        output = Cut(Hexagon(aflats, thickness), tool);
-    }
-    else if(indexHead == 2) // 2 == SHCS
-    {
-        double aflats = dimensions.GetHeadDims(indexHead, indexThread).at(2);
-        double diam = dimensions.GetHeadDims(indexHead, indexThread).at(1);
-        output = Cut(BRepPrimAPI_MakeCylinder(0.5*diam, thickness).Solid(), Hexagon(aflats, aflats));
-    }
-
-    offset.SetTranslation(gp_Vec(0.0, 0.0, -thickness));
-    return TopoDS::Solid(BRepBuilderAPI_Transform(output, offset));
-    */
+    return TopoDS::Solid(BRepBuilderAPI_Transform(head, offset));
 }

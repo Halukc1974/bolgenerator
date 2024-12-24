@@ -34,40 +34,14 @@
 class Bolt
 {
     public:
-        Bolt(std::string, double, double, double, double, double, double);
+        Bolt(double, double, double, double, double, double);
         TopoDS_Solid Solid();
     
     private:
         double majord, length, pitch, headD1, headD2, headD3;
-        std::string type;
         TopoDS_Solid Shank();
         TopoDS_Solid Head();
-        TopoDS_Solid body, head;
+        TopoDS_Solid body;
 };
-
-/*
-#include <TopoDS_Solid.hxx>
-
-#include "chamfer.h"
-#include "dimensions.h"
-#include "export.h"
-#include "hexagon.h"
-#include "thread.h"
-
-#include "export.h"
-
-class Bolt : Dimensions
-{
-public:
-    Bolt(int, int, double, bool=false);
-    TopoDS_Solid Solid();
-
-private:
-    TopoDS_Solid Head(int, int);
-    TopoDS_Solid Shank(int, double, bool);
-    bool simple;
-    Dimensions dimensions;
-};
-*/
 
 #endif // BOLT_H

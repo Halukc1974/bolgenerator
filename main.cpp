@@ -18,18 +18,16 @@
 */
 
 #include "bolt.h"
-//#include "convert.h"
 #include "export.h"
 
 int main(int argc, char *argv[])
 {
     std::string filename = std::string(argv[1]).append(".brep");
-    Bolt bolt = Bolt(argv[2],
+    Bolt bolt = Bolt(atof(argv[2]),
                      atof(argv[3]),
                      atof(argv[4]),
                      atof(argv[5]),
                      atof(argv[6]),
-                     atof(argv[7]),
-                     atof(argv[8])); 
+                     atof(argv[7])); 
     ExportBRep(bolt.Solid(), std::string("Tests/").append(filename).c_str());
 }

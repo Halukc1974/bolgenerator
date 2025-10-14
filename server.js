@@ -20,11 +20,11 @@ app.get('/', (req, res) => {
 
 // Route to generate bolt
 app.post('/generate', (req, res) => {
-    let { majord, length, pitch, headD1, headD2, headD3, headType } = req.body;
+    let { majord, length, pitch, headD1, headD2, headD3, headD4, headType } = req.body;
 
     // Validate inputs
-    if (!majord || !length || !pitch || !headD1 || !headD2 || !headD3 || headType === undefined) {
-        return res.status(400).json({ error: 'All parameters are required' });
+    if (!majord || !length || !pitch || !headD1 || !headD2 || headType === undefined) {
+        return res.status(400).json({ error: 'Major diameter, length, pitch, headD1, headD2, and headType are required' });
     }
 
     // Keep values in millimeters (no conversion)
@@ -34,18 +34,30 @@ app.post('/generate', (req, res) => {
     pitch = parseFloat(pitch);
     headD1 = parseFloat(headD1);
     headD2 = parseFloat(headD2);
-    headD3 = parseFloat(headD3);
+    headD3 = parseFloat(headD3) || 0;
+    headD4 = parseFloat(headD4) || 0;
     headType = parseInt(headType);
+
+    // Validate headD3 and headD4 for socket head
+    if (headType === 1) {
+        if (!headD3 || headD3 <= 0) {
+            return res.status(400).json({ error: 'Socket head requires headD3 (socket size)' });
+        }
+        if (!headD4 || headD4 <= 0) {
+            return res.status(400).json({ error: 'Socket head requires headD4 (socket depth)' });
+        }
+    }
 
     // Generate a unique filename
     const filename = `bolt_${Date.now()}`;
 
-    // Run the C++ executable (note: order is majord, pitch, length, headD1, headD2, headD3, headType)
-    const command = `./scim_bolts ${filename} ${majord} ${pitch} ${length} ${headD1} ${headD2} ${headD3} ${headType}`;
+    // Run the C++ executable (note: order is majord, pitch, length, headD1, headD2, headD3, headD4, headType)
+    const command = `./scim_bolts ${filename} ${majord} ${pitch} ${length} ${headD1} ${headD2} ${headD3} ${headD4} ${headType}`;
 
     exec(command, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${error.message}`);
+            console.error(`stderr: ${stderr}`);
             return res.status(500).json({ error: 'Failed to generate bolt. Check parameters.' });
         }
 

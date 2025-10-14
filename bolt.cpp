@@ -18,6 +18,7 @@
 */
 
 #include "bolt.h"
+#include <stdexcept>
 
 Bolt::Bolt(double majord_, 
            double length_,
@@ -25,12 +26,14 @@ Bolt::Bolt(double majord_,
            double headD1_,
            double headD2_,
            double headD3_,
+           double headD4_,
            int headType_): majord(majord_),
                             length(length_),
                             pitch(pitch_),
-                            headD1(headD1_), // Head Diameter
+                            headD1(headD1_), // Head Diameter or Across Flats
                             headD2(headD2_), // Head Height
-                            headD3(headD3_), // Drive Size
+                            headD3(headD3_), // Socket Size (across flats)
+                            headD4(headD4_), // Socket Depth
                             headType(headType_)
 {
     TopExp_Explorer map(BRepAlgoAPI_Fuse(Shank(),
@@ -95,20 +98,52 @@ TopoDS_Solid Bolt::Head()
 
     if (headType == 0) { // Hex head
         // headD1 = across flats, headD2 = height
+        // Validation
+        if (headD1 <= 0 || headD2 <= 0) {
+            throw std::runtime_error("Hex head: D1 (across flats) and D2 (height) must be positive");
+        }
         // Create hexagonal prism directly
         head = Hexagon(headD1, headD2);
         
     } else if (headType == 1) { // Socket head (cylinder with hex socket)
-        // headD1 = outer diameter, headD2 = height, headD3 = socket size
+        // headD1 = outer diameter, headD2 = height
+        // headD3 = socket size (across flats), headD4 = socket depth
+        
+        // Validation
+        if (headD1 <= 0 || headD2 <= 0) {
+            throw std::runtime_error("Socket head: D1 (outer diameter) and D2 (height) must be positive");
+        }
+        if (headD3 <= 0) {
+            throw std::runtime_error("Socket head: D3 (socket size) must be positive");
+        }
+        if (headD4 <= 0) {
+            throw std::runtime_error("Socket head: D4 (socket depth) must be positive");
+        }
+        // Socket must be smaller than outer diameter
+        if (headD3 >= headD1 * 0.9) {
+            throw std::runtime_error("Socket head: Socket size (D3) must be smaller than outer diameter (D1)");
+        }
+        // Socket depth must not exceed head height
+        if (headD4 > headD2) {
+            throw std::runtime_error("Socket head: Socket depth (D4) cannot exceed head height (D2)");
+        }
+        
+        // Create cylindrical head
         head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
+        
         // Cut hex socket from top
-        TopoDS_Solid socket = Hexagon(headD3, headD2 * 0.5); // Socket depth = half height
+        TopoDS_Solid socket = Hexagon(headD3, headD4);
         gp_Trsf socketOffset;
-        socketOffset.SetTranslation(gp_Vec(0.0, 0.0, headD2 * 0.5));
+        // Position socket at top of head, going down into it
+        socketOffset.SetTranslation(gp_Vec(0.0, 0.0, headD2 - headD4));
         TopoDS_Solid positionedSocket = TopoDS::Solid(BRepBuilderAPI_Transform(socket, socketOffset));
         head = Cut(head, positionedSocket);
         
     } else if (headType == 2) { // Flat head (simple cylinder)
+        // headD1 = diameter, headD2 = height
+        if (headD1 <= 0 || headD2 <= 0) {
+            throw std::runtime_error("Flat head: D1 (diameter) and D2 (height) must be positive");
+        }
         head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
         
     } else {

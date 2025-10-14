@@ -30,7 +30,8 @@ int main(int argc, char *argv[])
                      atof(argv[5]),  // headD1
                      atof(argv[6]),  // headD2
                      atof(argv[7]),  // headD3
-                     atoi(argv[8])); // headType 
+                     atof(argv[8]),  // headD4
+                     atoi(argv[9])); // headType 
     ExportBRep(bolt.Solid(), std::string("Tests/").append(filename).c_str());
     ExportSTL(bolt.Solid(), std::string("Tests/").append(stlFilename).c_str());
 }

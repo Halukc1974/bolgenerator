@@ -219,6 +219,12 @@
                     <small id="headD3Help">Hex socket across flats (only for socket head)</small>
                 </div>
 
+                <div class="form-group" id="headD4Group">
+                    <label for="headD4" id="headD4Label">Socket Depth (mm):</label>
+                    <input type="number" id="headD4" name="headD4" step="0.01" value="0">
+                    <small id="headD4Help">How deep the hex socket goes into the head</small>
+                </div>
+
                 <button type="submit">Generate Bolt</button>
             </form>
 
@@ -457,29 +463,39 @@
             const headD1Label = document.getElementById('headD1Label');
             const headD1Help = document.getElementById('headD1Help');
             const headD3Group = document.getElementById('headD3Group');
+            const headD4Group = document.getElementById('headD4Group');
             const headD3Label = document.getElementById('headD3Label');
             const headD3Help = document.getElementById('headD3Help');
             const headD3Input = document.getElementById('headD3');
+            const headD4Input = document.getElementById('headD4');
 
             if (headType === '0') { // Hex Head
                 headD1Label.textContent = 'Hex Across Flats (mm):';
                 headD1Help.textContent = 'Distance between parallel sides of hex';
                 headD3Group.style.display = 'none';
+                headD4Group.style.display = 'none';
                 headD3Input.removeAttribute('required');
+                headD4Input.removeAttribute('required');
                 headD3Input.value = '0';
+                headD4Input.value = '0';
             } else if (headType === '1') { // Socket Head
                 headD1Label.textContent = 'Head Diameter (mm):';
                 headD1Help.textContent = 'Outer diameter of cylindrical head';
                 headD3Group.style.display = 'block';
+                headD4Group.style.display = 'block';
                 headD3Label.textContent = 'Socket Size (mm):';
                 headD3Help.textContent = 'Hex socket across flats';
                 headD3Input.setAttribute('required', 'required');
+                headD4Input.setAttribute('required', 'required');
             } else if (headType === '2') { // Flat Head
                 headD1Label.textContent = 'Head Diameter (mm):';
                 headD1Help.textContent = 'Diameter of flat head';
                 headD3Group.style.display = 'none';
+                headD4Group.style.display = 'none';
                 headD3Input.removeAttribute('required');
+                headD4Input.removeAttribute('required');
                 headD3Input.value = '0';
+                headD4Input.value = '0';
             }
         }
 

@@ -46,14 +46,16 @@ void ExportSTEP(TopoDS_Shape shape, Standard_CString filename)
 
 void ExportSTL(TopoDS_Shape shape, Standard_CString filename)
 {
-    // === EXACT FreeCAD MeshPart Implementation ===
-    // Source: MeshPart/App/Mesher.h (line 200-240) and Mesher.cpp (line 222-227)
-    // FreeCAD default values from Mesher.h:
-    //   - deflection = 0 (will be calculated)
-    //   - angularDeflection = 0.5 (radians)
-    //   - relative = false (absolute deflection mode)
+    // EXACT FreeCAD MeshPart implementation
+    // Source: MeshPart/App/Mesher.cpp line 222-226 (createStandard method)
+    // Source: MeshPart/App/Mesher.h line 246 (default values)
     
-    // Calculate bounding box for adaptive deflection
+    // FreeCAD Mesher default parameters:
+    // deflection = 0 (will be calculated adaptively)
+    // angularDeflection = 0.5 radians (28.65 degrees)
+    // relative = false (absolute deflection mode)
+    
+    // Calculate adaptive deflection like FreeCAD does
     Bnd_Box bbox;
     BRepBndLib::Add(shape, bbox);
     
@@ -71,16 +73,21 @@ void ExportSTL(TopoDS_Shape shape, Standard_CString filename)
         pow(zMax - zMin, 2)
     );
     
-    // === EXACT FreeCAD Parameters ===
-    // From MeshPart/App/Mesher.h line 231-234:
-    Standard_Real deflection = diagLength * 0.001;  // 0.1% of diagonal (adaptive)
-    Standard_Real angularDeflection = 0.5;          // Default from Mesher.h line 232
-    Standard_Boolean relative = Standard_False;      // Default from Mesher.h line 234
+    // FreeCAD MeshPart parameters (from Mesher.h line 246):
+    // Default: angularDeflection = 0.5, relative = false
+    // LinearDeflection from UI: 0.1 mm (Tessellation.ui line 306)
+    // Adaptive approach: 0.1% of diagonal OR fixed 0.1mm
     
-    // === Diagnostic Output ===
+    // FreeCAD UI default from Tessellation.ui:
+    // spinSurfaceDeviation value = 0.1 mm (line 306)
+    Standard_Real deflection = 0.0001;  // 0.1 mm (FreeCAD UI default, converted to meters)
+    Standard_Boolean relative = Standard_False;          // From Mesher.h line 249
+    Standard_Real angularDeflection = 0.5;              // From Mesher.h line 247 (28.65°)
+    
+    // Diagnostic output (FreeCAD style)
     std::cout << "\n=== FreeCAD MeshPart STL Export ===" << std::endl;
     std::cout << "Bounding box diagonal: " << diagLength * 1000 << " mm" << std::endl;
-    std::cout << "Linear deflection: " << deflection * 1000 << " mm (0.1%)" << std::endl;
+    std::cout << "Linear deflection: 0.1 mm (FreeCAD fixed default)" << std::endl;
     std::cout << "Angular deflection: " << angularDeflection << " rad (28.5°)" << std::endl;
     std::cout << "Relative mode: " << (relative ? "YES" : "NO (absolute)") << std::endl;
     
@@ -103,26 +110,19 @@ void ExportSTL(TopoDS_Shape shape, Standard_CString filename)
         std::cout << "  Closed: " << (shape.Closed() ? "YES ✓" : "NO ⚠") << std::endl;
     }
     
-    // === EXACT FreeCAD MeshPart Algorithm ===
-    // From: MeshPart/App/Mesher.cpp line 222-227
-    // Code:
-    //   if (!shape.IsNull()) {
-    //       BRepTools::Clean(shape);
-    //       BRepMesh_IncrementalMesh aMesh(shape, deflection, relative, angularDeflection);
-    //   }
-    std::cout << "\nGenerating mesh (FreeCAD MeshPart Mesher::createStandard)..." << std::endl;
+    // EXACT FreeCAD MeshPart meshing code
+    // From: MeshPart/App/Mesher.cpp line 222-225
+    std::cout << "\nGenerating mesh (exact FreeCAD MeshPart code)..." << std::endl;
     
-    // Note: BRepTools::Clean(shape) removed as it causes issues with our shapes
-    BRepMesh_IncrementalMesh aMesh(shape, 
-                                   deflection,
-                                   relative,
-                                   angularDeflection,
-                                   Standard_True);  // InParallel = true
-    
-    if (!aMesh.IsDone()) {
-        std::cerr << "  ⚠ Warning: Mesh generation incomplete" << std::endl;
-    } else {
-        std::cout << "  ✓ Mesh generation: SUCCESS" << std::endl;
+    if (!shape.IsNull()) {
+        BRepTools::Clean(shape);  // FreeCAD does this before meshing
+        BRepMesh_IncrementalMesh aMesh(shape, deflection, relative, angularDeflection);
+        
+        if (!aMesh.IsDone()) {
+            std::cerr << "  ⚠ Warning: Mesh generation incomplete" << std::endl;
+        } else {
+            std::cout << "  ✓ Mesh generation: SUCCESS" << std::endl;
+        }
     }
     
     // Export to binary STL (FreeCAD default)

@@ -22,6 +22,9 @@ app.get('/', (req, res) => {
 app.post('/generate', (req, res) => {
     let { majord, length, pitch, headD1, headD2, headD3, headD4, headType } = req.body;
 
+    // Debug: Log received parameters
+    console.log('Received parameters:', { majord, length, pitch, headD1, headD2, headD3, headD4, headType });
+
     // Validate inputs
     if (!majord || !length || !pitch || !headD1 || !headD2 || headType === undefined) {
         return res.status(400).json({ error: 'Major diameter, length, pitch, headD1, headD2, and headType are required' });
@@ -38,6 +41,8 @@ app.post('/generate', (req, res) => {
     headD4 = parseFloat(headD4) || 0;
     headType = parseInt(headType);
 
+    console.log('Parsed parameters:', { majord, length, pitch, headD1, headD2, headD3, headD4, headType });
+
     // Validate headD3 and headD4 for socket head
     if (headType === 1) {
         if (!headD3 || headD3 <= 0) {
@@ -53,6 +58,8 @@ app.post('/generate', (req, res) => {
 
     // Run the C++ executable (note: order is majord, pitch, length, headD1, headD2, headD3, headD4, headType)
     const command = `./scim_bolts ${filename} ${majord} ${pitch} ${length} ${headD1} ${headD2} ${headD3} ${headD4} ${headType}`;
+
+    console.log('Executing command:', command);
 
     exec(command, (error, stdout, stderr) => {
         if (error) {

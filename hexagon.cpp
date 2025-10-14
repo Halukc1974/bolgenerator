@@ -21,15 +21,17 @@
 
 TopoDS_Solid Hexagon(double aflats, double height)
 {
-    double acorners = 1.1*aflats; // Approximate
+    // aflats = across flats (distance between parallel sides)
+    // acorners = across corners (circumradius)
+    // For a regular hexagon: acorners = aflats / cos(30°) = aflats / (sqrt(3)/2) = aflats * 2/sqrt(3)
+    double acorners = aflats * 1.1547; // aflats * 2 / sqrt(3) = aflats * 1.1547
 
     TopoDS_Shape mask;  // Negative space, used to remove material from head
     TopoDS_Solid hex;   // End result, modified throughout the function
     gp_Trsf trans, rot; // Used to transform a simple body to form mask
 
-    BRepPrimAPI_MakeCylinder blank
-        //= BRepPrimAPI_MakeCylinder(0.5*acorners, height);
-        = BRepPrimAPI_MakeCylinder(aflats, height);
+    // Create cylindrical blank with radius = acorners/2 (circumradius)
+    BRepPrimAPI_MakeCylinder blank = BRepPrimAPI_MakeCylinder(0.5*acorners, height);
 
     // Build the simple body used to construct mask
     TopoDS_Solid tool = BRepPrimAPI_MakeBox(acorners, acorners, height);

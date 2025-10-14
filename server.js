@@ -27,13 +27,14 @@ app.post('/generate', (req, res) => {
         return res.status(400).json({ error: 'All parameters are required' });
     }
 
-    // Convert from mm to meters (user inputs in mm, app expects meters)
-    majord = parseFloat(majord) / 1000;
-    length = parseFloat(length) / 1000;
-    pitch = parseFloat(pitch) / 1000;
-    headD1 = parseFloat(headD1) / 1000;
-    headD2 = parseFloat(headD2) / 1000;
-    headD3 = parseFloat(headD3) / 1000;
+    // Keep values in millimeters (no conversion)
+    // User inputs in mm, app now works in mm
+    majord = parseFloat(majord);
+    length = parseFloat(length);
+    pitch = parseFloat(pitch);
+    headD1 = parseFloat(headD1);
+    headD2 = parseFloat(headD2);
+    headD3 = parseFloat(headD3);
     headType = parseInt(headType);
 
     // Generate a unique filename

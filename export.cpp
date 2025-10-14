@@ -27,20 +27,9 @@ void ExportBRep(TopoDS_Shape shape, Standard_CString filename)
 
 void ExportSTEP(TopoDS_Shape shape, Standard_CString filename)
 {
-    // STEPCONTROL_Writer defaults to millimeter units, and modifying
-    // "write.step.unit" did not sucessfully translate the part.
-
+    // Geometry is now in millimeters, STEP writer expects mm by default
     STEPControl_Writer writer;
-  
-    // (This didn't work.)
-    // Interface_Static::SetCVal("write.step.unit", "METER");
-    // writer.Transfer(shape, STEPControl_AsIs);
-
-    // This hack works.
-    gp_Trsf scale;
-    scale.SetScale(gp_Pnt(0,0,0), 1.0e3);
-    writer.Transfer(BRepBuilderAPI_Transform(shape, scale), STEPControl_AsIs);
-
+    writer.Transfer(shape, STEPControl_AsIs);
     writer.Write(filename);
 }
 
@@ -76,17 +65,16 @@ void ExportSTL(TopoDS_Shape shape, Standard_CString filename)
     // FreeCAD MeshPart parameters (from Mesher.h line 246):
     // Default: angularDeflection = 0.5, relative = false
     // LinearDeflection from UI: 0.1 mm (Tessellation.ui line 306)
-    // Adaptive approach: 0.1% of diagonal OR fixed 0.1mm
     
-    // FreeCAD UI default from Tessellation.ui:
-    // spinSurfaceDeviation value = 0.1 mm (line 306)
-    Standard_Real deflection = 0.0001;  // 0.1 mm (FreeCAD UI default, converted to meters)
+    // Geometry is now in MILLIMETERS (not meters anymore)
+    // FreeCAD UI default from Tessellation.ui line 306: 0.1 mm
+    Standard_Real deflection = 0.1;  // 0.1 mm (FreeCAD UI default, in millimeters)
     Standard_Boolean relative = Standard_False;          // From Mesher.h line 249
     Standard_Real angularDeflection = 0.5;              // From Mesher.h line 247 (28.65°)
     
     // Diagnostic output (FreeCAD style)
     std::cout << "\n=== FreeCAD MeshPart STL Export ===" << std::endl;
-    std::cout << "Bounding box diagonal: " << diagLength * 1000 << " mm" << std::endl;
+    std::cout << "Bounding box diagonal: " << diagLength << " mm" << std::endl;
     std::cout << "Linear deflection: 0.1 mm (FreeCAD fixed default)" << std::endl;
     std::cout << "Angular deflection: " << angularDeflection << " rad (28.5°)" << std::endl;
     std::cout << "Relative mode: " << (relative ? "YES" : "NO (absolute)") << std::endl;

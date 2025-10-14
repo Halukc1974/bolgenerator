@@ -133,13 +133,17 @@ TopoDS_Solid Bolt::Head()
         head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
         
         // Cut hex socket from top
-        std::cout << "Creating hex socket: size=" << headD3 << ", depth=" << headD4 << std::endl;
-        TopoDS_Solid socket = Hexagon(headD3, headD4);
-        std::cout << "Socket created, positioning at z=" << (headD2 - headD4) << std::endl;
+        // headD3 might be radius, so use 2*headD3 for diameter (across flats)
+        double socketSize = 2.0 * headD3;
+        std::cout << "Creating hex socket: input size=" << headD3 << ", using diameter=" << socketSize << ", depth=" << headD4 << std::endl;
+        TopoDS_Solid socket = Hexagon(socketSize, headD4 + 1.0); // Add 1mm extra depth to ensure cut
+        
+        // Position socket slightly above (0.5mm) the head surface to ensure proper cut
+        double socketZ = headD2 - headD4 - 0.5;
+        std::cout << "Socket created, positioning at z=" << socketZ << " (0.5mm above surface)" << std::endl;
         
         gp_Trsf socketOffset;
-        // Position socket at top of head, going down into it
-        socketOffset.SetTranslation(gp_Vec(0.0, 0.0, headD2 - headD4));
+        socketOffset.SetTranslation(gp_Vec(0.0, 0.0, socketZ));
         TopoDS_Solid positionedSocket = TopoDS::Solid(BRepBuilderAPI_Transform(socket, socketOffset));
         
         std::cout << "Cutting socket from head..." << std::endl;

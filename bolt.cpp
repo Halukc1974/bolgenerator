@@ -135,12 +135,18 @@ TopoDS_Solid Bolt::Head()
         // Cut hex socket from top
         // headD3 might be radius, so use 2*headD3 for diameter (across flats)
         double socketSize = 2.0 * headD3;
-        std::cout << "Creating hex socket: input size=" << headD3 << ", using diameter=" << socketSize << ", depth=" << headD4 << std::endl;
-        TopoDS_Solid socket = Hexagon(socketSize, headD4 + 1.0); // Add 1mm extra depth to ensure cut
+        // Socket should go from top of head downward by headD4 depth
+        // Add small margin (0.1mm) to ensure cut, but not too much
+        double socketHeight = headD4 + 0.1;
         
-        // Position socket slightly above (0.5mm) the head surface to ensure proper cut
-        double socketZ = headD2 - headD4 - 0.5;
-        std::cout << "Socket created, positioning at z=" << socketZ << " (0.5mm above surface)" << std::endl;
+        std::cout << "Creating hex socket: input size=" << headD3 << ", using diameter=" << socketSize << ", depth=" << headD4 << std::endl;
+        std::cout << "Socket height in model: " << socketHeight << " mm" << std::endl;
+        TopoDS_Solid socket = Hexagon(socketSize, socketHeight);
+        
+        // Position socket at exact top of head going downward
+        // Socket starts at (headD2 - socketHeight) so it ends exactly at headD2
+        double socketZ = headD2 - socketHeight;
+        std::cout << "Socket positioning: z=" << socketZ << " to z=" << headD2 << " (top of head)" << std::endl;
         
         gp_Trsf socketOffset;
         socketOffset.SetTranslation(gp_Vec(0.0, 0.0, socketZ));

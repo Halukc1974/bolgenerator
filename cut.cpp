@@ -20,6 +20,8 @@
 #include "cut.h"
 #include <iostream>
 #include <stdexcept>
+#include <GProp_GProps.hxx>
+#include <BRepGProp.hxx>
 
 TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool)
 {
@@ -31,6 +33,13 @@ TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool)
     */
 
     std::cout << "Cut: Performing boolean cut operation..." << std::endl;
+    
+    // Calculate volume before cut
+    GProp_GProps propsBody;
+    BRepGProp::VolumeProperties(body, propsBody);
+    double volumeBefore = propsBody.Mass();
+    std::cout << "Cut: Body volume before cut: " << volumeBefore << " mm³" << std::endl;
+    
     BRepAlgoAPI_Cut cutOp(body, tool);
     
     if (!cutOp.IsDone()) {
@@ -58,6 +67,15 @@ TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool)
     }
     
     TopoDS_Solid resultSolid = TopoDS::Solid(map.Current());
+    
+    // Calculate volume after cut
+    GProp_GProps propsResult;
+    BRepGProp::VolumeProperties(resultSolid, propsResult);
+    double volumeAfter = propsResult.Mass();
+    double volumeRemoved = volumeBefore - volumeAfter;
+    std::cout << "Cut: Result volume after cut: " << volumeAfter << " mm³" << std::endl;
+    std::cout << "Cut: Volume removed: " << volumeRemoved << " mm³ (" << (volumeRemoved/volumeBefore*100) << "%)" << std::endl;
+    
     std::cout << "Cut: Successfully extracted solid from result" << std::endl;
     return resultSolid;
 }

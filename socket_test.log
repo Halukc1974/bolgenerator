@@ -1,0 +1,43 @@
+Creating hex socket: input size=6, using diameter=12, depth=6
+Hexagon: aflats=12, height=7
+Hexagon: acorners=13.8564, cylinder radius=6.9282
+Cut: Performing boolean cut operation...
+Cut: Result shape type: 0
+Cut: Successfully extracted solid from result
+Hexagon: Created hex shape, returning...
+Socket created, positioning at z=3.5 (0.5mm above surface)
+Cutting socket from head...
+Cut: Performing boolean cut operation...
+Cut: Result shape type: 0
+Cut: Successfully extracted solid from result
+Cut operation completed
+Cut: Performing boolean cut operation...
+Cut: Result shape type: 0
+Cut: Successfully extracted solid from result
+Cut: Performing boolean cut operation...
+Cut: Result shape type: 0
+Cut: Successfully extracted solid from result
+Cut: Performing boolean cut operation...
+Cut: Result shape type: 0
+Cut: Successfully extracted solid from result
+Cut: Performing boolean cut operation...
+Cut: Result shape type: 0
+Cut: Successfully extracted solid from result
+
+=== FreeCAD MeshPart STL Export ===
+Bounding box diagonal: 49.3144 mm
+Linear deflection: 0.1 mm (FreeCAD fixed default)
+Angular deflection: 0.5 rad (28.5°)
+Relative mode: NO (absolute)
+
+Shape validation:
+  Type: SOLID ✓
+  Closed: NO ⚠
+
+Generating mesh (exact FreeCAD MeshPart code)...
+  ✓ Mesh generation: SUCCESS
+
+Exporting binary STL...
+  ✓ STL export: SUCCESS
+===================================
+

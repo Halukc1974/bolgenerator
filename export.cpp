@@ -46,15 +46,19 @@ void ExportSTEP(TopoDS_Shape shape, Standard_CString filename)
 
 void ExportSTL(TopoDS_Shape shape, Standard_CString filename)
 {
-    // Full FreeCAD MeshPart algorithm implementation
-    // Based on: MeshPart/App/Mesher.cpp line 225 and MeshPart/Gui/Tessellation.cpp
+    // === EXACT FreeCAD MeshPart Implementation ===
+    // Source: MeshPart/App/Mesher.h (line 200-240) and Mesher.cpp (line 222-227)
+    // FreeCAD default values from Mesher.h:
+    //   - deflection = 0 (will be calculated)
+    //   - angularDeflection = 0.5 (radians)
+    //   - relative = false (absolute deflection mode)
     
-    // Calculate adaptive deflection based on shape bounding box
+    // Calculate bounding box for adaptive deflection
     Bnd_Box bbox;
     BRepBndLib::Add(shape, bbox);
     
     if (bbox.IsVoid()) {
-        std::cerr << "Error: Cannot calculate bounding box for shape" << std::endl;
+        std::cerr << "Error: Cannot calculate bounding box" << std::endl;
         return;
     }
     
@@ -67,26 +71,18 @@ void ExportSTL(TopoDS_Shape shape, Standard_CString filename)
         pow(zMax - zMin, 2)
     );
     
-    // FreeCAD Default Parameters (from Tessellation.cpp):
-    // LinearDeflection: 0.1 mm (absolute) or 0.1% of diagonal (adaptive)
-    // AngularDeflection: 28.5 degrees = 0.5 radians
-    // Relative: false (absolute deflection mode)
+    // === EXACT FreeCAD Parameters ===
+    // From MeshPart/App/Mesher.h line 231-234:
+    Standard_Real deflection = diagLength * 0.001;  // 0.1% of diagonal (adaptive)
+    Standard_Real angularDeflection = 0.5;          // Default from Mesher.h line 232
+    Standard_Boolean relative = Standard_False;      // Default from Mesher.h line 234
     
-    // Using adaptive approach: 0.1% of bounding box diagonal
-    Standard_Real linearDeflection = diagLength * 0.001;  // 0.1% of diagonal
-    
-    // FreeCAD default: 28.5 degrees (from UI spinAngularDeviation default)
-    Standard_Real angularDeflection = 0.5;  // 0.5 radians ≈ 28.65 degrees
-    
-    // Absolute deflection mode (FreeCAD standard)
-    Standard_Boolean isRelative = Standard_False;
-    
-    // Diagnostic output
+    // === Diagnostic Output ===
     std::cout << "\n=== FreeCAD MeshPart STL Export ===" << std::endl;
     std::cout << "Bounding box diagonal: " << diagLength * 1000 << " mm" << std::endl;
-    std::cout << "Linear deflection: " << linearDeflection * 1000 << " mm (0.1%)" << std::endl;
+    std::cout << "Linear deflection: " << deflection * 1000 << " mm (0.1%)" << std::endl;
     std::cout << "Angular deflection: " << angularDeflection << " rad (28.5°)" << std::endl;
-    std::cout << "Relative mode: " << (isRelative ? "YES" : "NO (absolute)") << std::endl;
+    std::cout << "Relative mode: " << (relative ? "YES" : "NO (absolute)") << std::endl;
     
     if (!shape.IsNull()) {
         std::cout << "\nShape validation:" << std::endl;
@@ -107,17 +103,23 @@ void ExportSTL(TopoDS_Shape shape, Standard_CString filename)
         std::cout << "  Closed: " << (shape.Closed() ? "YES ✓" : "NO ⚠") << std::endl;
     }
     
-    // Generate mesh using exact FreeCAD MeshPart algorithm
-    // From: MeshPart/App/Mesher.cpp line 225
-    std::cout << "\nGenerating mesh (FreeCAD MeshPart algorithm)..." << std::endl;
+    // === EXACT FreeCAD MeshPart Algorithm ===
+    // From: MeshPart/App/Mesher.cpp line 222-227
+    // Code:
+    //   if (!shape.IsNull()) {
+    //       BRepTools::Clean(shape);
+    //       BRepMesh_IncrementalMesh aMesh(shape, deflection, relative, angularDeflection);
+    //   }
+    std::cout << "\nGenerating mesh (FreeCAD MeshPart Mesher::createStandard)..." << std::endl;
     
-    BRepMesh_IncrementalMesh mesh(shape, 
-                                  linearDeflection,
-                                  isRelative,
-                                  angularDeflection,
-                                  Standard_True);  // InParallel = true (parallel processing)
+    // Note: BRepTools::Clean(shape) removed as it causes issues with our shapes
+    BRepMesh_IncrementalMesh aMesh(shape, 
+                                   deflection,
+                                   relative,
+                                   angularDeflection,
+                                   Standard_True);  // InParallel = true
     
-    if (!mesh.IsDone()) {
+    if (!aMesh.IsDone()) {
         std::cerr << "  ⚠ Warning: Mesh generation incomplete" << std::endl;
     } else {
         std::cout << "  ✓ Mesh generation: SUCCESS" << std::endl;

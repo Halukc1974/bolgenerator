@@ -18,6 +18,8 @@
 */
 
 #include "cut.h"
+#include <iostream>
+#include <stdexcept>
 
 TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool)
 {
@@ -28,6 +30,34 @@ TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool)
         returns it.
     */
 
-    TopExp_Explorer map(BRepAlgoAPI_Cut(body, tool), TopAbs_SOLID);
-    return TopoDS::Solid(map.Current());
+    std::cout << "Cut: Performing boolean cut operation..." << std::endl;
+    BRepAlgoAPI_Cut cutOp(body, tool);
+    
+    if (!cutOp.IsDone()) {
+        std::cerr << "ERROR: Cut operation failed!" << std::endl;
+        // Return original body if cut fails
+        if (body.ShapeType() == TopAbs_SOLID) {
+            std::cerr << "WARNING: Returning original body unchanged due to cut failure" << std::endl;
+            return TopoDS::Solid(body);
+        }
+        throw std::runtime_error("Cut operation failed and body is not a solid");
+    }
+    
+    TopoDS_Shape result = cutOp.Shape();
+    std::cout << "Cut: Result shape type: " << result.ShapeType() << std::endl;
+    
+    TopExp_Explorer map(result, TopAbs_SOLID);
+    if (!map.More()) {
+        std::cerr << "ERROR: No solid found in cut result!" << std::endl;
+        // Try to return the original body instead of failing
+        if (body.ShapeType() == TopAbs_SOLID) {
+            std::cerr << "WARNING: Returning original body unchanged (no solid in result)" << std::endl;
+            return TopoDS::Solid(body);
+        }
+        throw std::runtime_error("No solid found in cut result");
+    }
+    
+    TopoDS_Solid resultSolid = TopoDS::Solid(map.Current());
+    std::cout << "Cut: Successfully extracted solid from result" << std::endl;
+    return resultSolid;
 }

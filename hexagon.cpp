@@ -18,13 +18,18 @@
 */
 
 #include "hexagon.h"
+#include <iostream>
 
 TopoDS_Solid Hexagon(double aflats, double height)
 {
+    std::cout << "Hexagon: aflats=" << aflats << ", height=" << height << std::endl;
+    
     // aflats = across flats (distance between parallel sides)
     // For regular hexagon: circumradius = aflats / sqrt(3) ≈ aflats * 0.577
     // But we need acorners (diameter across corners) = 2 * circumradius
     double acorners = aflats * 1.1547; // aflats * 2/sqrt(3) = aflats * 1.1547
+    
+    std::cout << "Hexagon: acorners=" << acorners << ", cylinder radius=" << (0.5*acorners) << std::endl;
 
     TopoDS_Shape mask;  // Negative space, used to remove material from head
     TopoDS_Solid hex;   // End result, modified throughout the function
@@ -47,6 +52,9 @@ TopoDS_Solid Hexagon(double aflats, double height)
 
     // Cut away the mask from blank to create hexagon
     hex = Cut(blank, mask);
+    
+    std::cout << "Hexagon: Created hex shape, returning..." << std::endl;
+    
     //trans.SetTranslation(gp_Vec(0.0, 0.0, -height));
     
     //return TopoDS::Solid(BRepBuilderAPI_Transform(hex, trans));

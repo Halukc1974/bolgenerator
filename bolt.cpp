@@ -19,6 +19,7 @@
 
 #include "bolt.h"
 #include <stdexcept>
+#include <iostream>
 
 Bolt::Bolt(double majord_, 
            double length_,
@@ -132,12 +133,18 @@ TopoDS_Solid Bolt::Head()
         head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
         
         // Cut hex socket from top
+        std::cout << "Creating hex socket: size=" << headD3 << ", depth=" << headD4 << std::endl;
         TopoDS_Solid socket = Hexagon(headD3, headD4);
+        std::cout << "Socket created, positioning at z=" << (headD2 - headD4) << std::endl;
+        
         gp_Trsf socketOffset;
         // Position socket at top of head, going down into it
         socketOffset.SetTranslation(gp_Vec(0.0, 0.0, headD2 - headD4));
         TopoDS_Solid positionedSocket = TopoDS::Solid(BRepBuilderAPI_Transform(socket, socketOffset));
+        
+        std::cout << "Cutting socket from head..." << std::endl;
         head = Cut(head, positionedSocket);
+        std::cout << "Cut operation completed" << std::endl;
         
     } else if (headType == 2) { // Flat head (simple cylinder)
         // headD1 = diameter, headD2 = height

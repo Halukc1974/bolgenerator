@@ -44,6 +44,13 @@
         .form-group {
             margin-bottom: 15px;
         }
+        .form-group small {
+            display: block;
+            margin-top: 4px;
+            color: #666;
+            font-size: 0.85em;
+            font-style: italic;
+        }
         label {
             display: block;
             margin-bottom: 5px;
@@ -196,18 +203,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="headD1">Head Diameter 1 (mm):</label>
+                    <label for="headD1" id="headD1Label">Hex Across Flats (mm):</label>
                     <input type="number" id="headD1" name="headD1" step="0.01" required>
+                    <small id="headD1Help">Distance between parallel sides of hex</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="headD2">Head Diameter 2 (mm):</label>
+                    <label for="headD2">Head Height (mm):</label>
                     <input type="number" id="headD2" name="headD2" step="0.01" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="headD3">Head Diameter 3 (mm):</label>
-                    <input type="number" id="headD3" name="headD3" step="0.01" required>
+                <div class="form-group" id="headD3Group">
+                    <label for="headD3" id="headD3Label">Socket Size (mm):</label>
+                    <input type="number" id="headD3" name="headD3" step="0.01" value="0">
+                    <small id="headD3Help">Hex socket across flats (only for socket head)</small>
                 </div>
 
                 <button type="submit">Generate Bolt</button>
@@ -440,6 +449,44 @@
             camera.updateProjectionMatrix();
             renderer.setSize(document.querySelector('.viewer-container').clientWidth,
                            document.querySelector('.viewer-container').clientHeight);
+        });
+
+        // Update form labels based on head type
+        function updateHeadLabels() {
+            const headType = document.getElementById('headType').value;
+            const headD1Label = document.getElementById('headD1Label');
+            const headD1Help = document.getElementById('headD1Help');
+            const headD3Group = document.getElementById('headD3Group');
+            const headD3Label = document.getElementById('headD3Label');
+            const headD3Help = document.getElementById('headD3Help');
+            const headD3Input = document.getElementById('headD3');
+
+            if (headType === '0') { // Hex Head
+                headD1Label.textContent = 'Hex Across Flats (mm):';
+                headD1Help.textContent = 'Distance between parallel sides of hex';
+                headD3Group.style.display = 'none';
+                headD3Input.removeAttribute('required');
+                headD3Input.value = '0';
+            } else if (headType === '1') { // Socket Head
+                headD1Label.textContent = 'Head Diameter (mm):';
+                headD1Help.textContent = 'Outer diameter of cylindrical head';
+                headD3Group.style.display = 'block';
+                headD3Label.textContent = 'Socket Size (mm):';
+                headD3Help.textContent = 'Hex socket across flats';
+                headD3Input.setAttribute('required', 'required');
+            } else if (headType === '2') { // Flat Head
+                headD1Label.textContent = 'Head Diameter (mm):';
+                headD1Help.textContent = 'Diameter of flat head';
+                headD3Group.style.display = 'none';
+                headD3Input.removeAttribute('required');
+                headD3Input.value = '0';
+            }
+        }
+
+        // Initialize labels and listen for changes
+        document.addEventListener('DOMContentLoaded', () => {
+            updateHeadLabels();
+            document.getElementById('headType').addEventListener('change', updateHeadLabels);
         });
 
         document.getElementById('boltForm').addEventListener('submit', async (e) => {

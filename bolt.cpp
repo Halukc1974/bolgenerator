@@ -94,17 +94,26 @@ TopoDS_Solid Bolt::Head()
     gp_Trsf offset;
 
     if (headType == 0) { // Hex head
+        // headD1 = across flats, headD2 = height
+        // Create hexagonal prism directly
+        head = Hexagon(headD1, headD2);
+        
+    } else if (headType == 1) { // Socket head (cylinder with hex socket)
+        // headD1 = outer diameter, headD2 = height, headD3 = socket size
         head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
-        head = Cut(head, Hexagon(headD3, headD3));
-    } else if (headType == 1) { // Socket head
+        // Cut hex socket from top
+        TopoDS_Solid socket = Hexagon(headD3, headD2 * 0.5); // Socket depth = half height
+        gp_Trsf socketOffset;
+        socketOffset.SetTranslation(gp_Vec(0.0, 0.0, headD2 * 0.5));
+        TopoDS_Solid positionedSocket = TopoDS::Solid(BRepBuilderAPI_Transform(socket, socketOffset));
+        head = Cut(head, positionedSocket);
+        
+    } else if (headType == 2) { // Flat head (simple cylinder)
         head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
-        // No cut for socket head
-    } else if (headType == 2) { // Flat head (simplified as cylinder)
-        head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
+        
     } else {
         // Default to hex
-        head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
-        head = Cut(head, Hexagon(headD3, headD3));
+        head = Hexagon(headD1, headD2);
     }
 
     offset.SetTranslation(gp_Vec(0.0, 0.0, -headD2));

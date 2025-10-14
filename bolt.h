@@ -34,11 +34,12 @@
 class Bolt
 {
     public:
-        Bolt(double, double, double, double, double, double);
+        Bolt(double, double, double, double, double, double, int);
         TopoDS_Solid Solid();
     
     private:
         double majord, length, pitch, headD1, headD2, headD3;
+        int headType;
         TopoDS_Solid Shank();
         TopoDS_Solid Head();
         TopoDS_Solid body;

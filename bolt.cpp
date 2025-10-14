@@ -20,16 +20,18 @@
 #include "bolt.h"
 
 Bolt::Bolt(double majord_, 
-           double pitch_,
            double length_,
+           double pitch_,
            double headD1_,
            double headD2_,
-           double headD3_): majord(majord_),
-                            pitch(pitch_),
+           double headD3_,
+           int headType_): majord(majord_),
                             length(length_),
+                            pitch(pitch_),
                             headD1(headD1_), // Head Diameter
                             headD2(headD2_), // Head Height
-                            headD3(headD3_)  // Drive Size
+                            headD3(headD3_), // Drive Size
+                            headType(headType_)
 {
     TopExp_Explorer map(BRepAlgoAPI_Fuse(Shank(),
                                          Head()),
@@ -88,10 +90,23 @@ TopoDS_Solid Bolt::Solid()
 
 TopoDS_Solid Bolt::Head()
 {
-    TopoDS_Solid head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
+    TopoDS_Solid head;
     gp_Trsf offset;
 
-    head = Cut(head, Hexagon(headD3, headD3));
+    if (headType == 0) { // Hex head
+        head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
+        head = Cut(head, Hexagon(headD3, headD3));
+    } else if (headType == 1) { // Socket head
+        head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
+        // No cut for socket head
+    } else if (headType == 2) { // Flat head (simplified as cylinder)
+        head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
+    } else {
+        // Default to hex
+        head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
+        head = Cut(head, Hexagon(headD3, headD3));
+    }
+
     offset.SetTranslation(gp_Vec(0.0, 0.0, -headD2));
 
     return TopoDS::Solid(BRepBuilderAPI_Transform(head, offset));

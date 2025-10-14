@@ -1,0 +1,7 @@
+{
+    "C_Cpp.default.includePath": [
+        "/usr/include/opencascade"
+    ],
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.intelliSenseEngine": "default"
+}

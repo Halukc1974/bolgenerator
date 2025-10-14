@@ -23,11 +23,14 @@
 int main(int argc, char *argv[])
 {
     std::string filename = std::string(argv[1]).append(".brep");
-    Bolt bolt = Bolt(atof(argv[2]),
-                     atof(argv[3]),
-                     atof(argv[4]),
-                     atof(argv[5]),
-                     atof(argv[6]),
-                     atof(argv[7])); 
+    std::string stlFilename = std::string(argv[1]).append(".stl");
+    Bolt bolt = Bolt(atof(argv[2]),  // majord
+                     atof(argv[4]),  // length
+                     atof(argv[3]),  // pitch
+                     atof(argv[5]),  // headD1
+                     atof(argv[6]),  // headD2
+                     atof(argv[7]),  // headD3
+                     atoi(argv[8])); // headType 
     ExportBRep(bolt.Solid(), std::string("Tests/").append(filename).c_str());
+    ExportSTL(bolt.Solid(), std::string("Tests/").append(stlFilename).c_str());
 }

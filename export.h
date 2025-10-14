@@ -20,17 +20,33 @@
 #ifndef EXPORT_H
 #define EXPORT_H
 
-#include <BRepBuilderAPI_Transform.hxx>
+// OpenCASCADE includes for CAD operations
+#include <TopoDS_Shape.hxx>
 #include <BRepTools.hxx>
 #include <STEPControl_Writer.hxx>
-#include <Standard_CString.hxx>
-#include <TopoDS_Shape.hxx>
+#include <BRepBuilderAPI_Transform.hxx>
 #include <gp_Trsf.hxx>
+#include <Standard_CString.hxx>
+#include <TopAbs_ShapeEnum.hxx>
+
+// Bounding box calculation
+#include <Bnd_Box.hxx>
+#include <BRepBndLib.hxx>
+
+// STL export includes
+#include <StlAPI_Writer.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+
+// Math for adaptive mesh
+#include <cmath>
 
 void ExportBRep(TopoDS_Shape shape,
                 Standard_CString filename);
 
 void ExportSTEP(TopoDS_Shape shape,
                 Standard_CString filename);
+
+void ExportSTL(TopoDS_Shape shape,
+               Standard_CString filename);
 
 #endif // EXPORT_H

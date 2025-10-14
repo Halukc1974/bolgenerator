@@ -1,1 +1,43 @@
 BoltGenerator web app listening at http://localhost:3000
+Received parameters: {
+  majord: '10',
+  length: '30',
+  pitch: '0.8',
+  headD1: '20',
+  headD2: '7',
+  headD3: '0',
+  headD4: '0',
+  headType: '0'
+}
+Parsed parameters: {
+  majord: 10,
+  length: 30,
+  pitch: 0.8,
+  headD1: 20,
+  headD2: 7,
+  headD3: 0,
+  headD4: 0,
+  headType: 0
+}
+Executing command: ./scim_bolts bolt_1760442431277 10 0.8 30 20 7 0 0 0
+Received parameters: {
+  majord: '10',
+  length: '30',
+  pitch: '0.8',
+  headD1: '20',
+  headD2: '10',
+  headD3: '6',
+  headD4: '6',
+  headType: '1'
+}
+Parsed parameters: {
+  majord: 10,
+  length: 30,
+  pitch: 0.8,
+  headD1: 20,
+  headD2: 10,
+  headD3: 6,
+  headD4: 6,
+  headType: 1
+}
+Executing command: ./scim_bolts bolt_1760442473853 10 0.8 30 20 10 6 6 1

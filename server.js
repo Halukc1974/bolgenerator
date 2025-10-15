@@ -20,10 +20,11 @@ app.get('/', (req, res) => {
 
 // Route to generate bolt
 app.post('/generate', (req, res) => {
-    let { majord, length, pitch, headD1, headD2, headD3, headD4, headType } = req.body;
+    let { majord, length, pitch, headD1, headD2, headD3, headD4, headType, 
+          generateNut, nutHeight, nutAcrossFlats, tolerance } = req.body;
 
     // Debug: Log received parameters
-    console.log('Received parameters:', { majord, length, pitch, headD1, headD2, headD3, headD4, headType });
+    console.log('Received parameters:', { majord, length, pitch, headD1, headD2, headD3, headD4, headType, generateNut, nutHeight, nutAcrossFlats, tolerance });
 
     // Validate inputs
     if (!majord || !length || !pitch || !headD1 || !headD2 || headType === undefined) {
@@ -31,7 +32,6 @@ app.post('/generate', (req, res) => {
     }
 
     // Keep values in millimeters (no conversion)
-    // User inputs in mm, app now works in mm
     majord = parseFloat(majord);
     length = parseFloat(length);
     pitch = parseFloat(pitch);
@@ -40,8 +40,14 @@ app.post('/generate', (req, res) => {
     headD3 = parseFloat(headD3) || 0;
     headD4 = parseFloat(headD4) || 0;
     headType = parseInt(headType);
+    
+    // Nut parameters
+    generateNut = generateNut === 'true' || generateNut === true || generateNut === 1 || generateNut === '1';
+    nutHeight = parseFloat(nutHeight) || 5;
+    nutAcrossFlats = parseFloat(nutAcrossFlats) || 10;
+    tolerance = parseFloat(tolerance) || 0.1;
 
-    console.log('Parsed parameters:', { majord, length, pitch, headD1, headD2, headD3, headD4, headType });
+    console.log('Parsed parameters:', { majord, length, pitch, headD1, headD2, headD3, headD4, headType, generateNut, nutHeight, nutAcrossFlats, tolerance });
 
     // Validate headD3 and headD4 for socket head
     if (headType === 1) {
@@ -56,8 +62,9 @@ app.post('/generate', (req, res) => {
     // Generate a unique filename
     const filename = `bolt_${Date.now()}`;
 
-    // Run the C++ executable (note: order is majord, pitch, length, headD1, headD2, headD3, headD4, headType)
-    const command = `./scim_bolts ${filename} ${majord} ${pitch} ${length} ${headD1} ${headD2} ${headD3} ${headD4} ${headType}`;
+    // Run the C++ executable with nut parameters
+    const nutFlag = generateNut ? 1 : 0;
+    const command = `./scim_bolts ${filename} ${majord} ${pitch} ${length} ${headD1} ${headD2} ${headD3} ${headD4} ${headType} ${nutHeight} ${nutAcrossFlats} ${tolerance} ${nutFlag}`;
 
     console.log('Executing command:', command);
 
@@ -70,16 +77,26 @@ app.post('/generate', (req, res) => {
 
         const brepPath = path.join(__dirname, 'Tests', `${filename}.brep`);
         const stlPath = path.join(__dirname, 'Tests', `${filename}.stl`);
+        const nutBrepPath = path.join(__dirname, 'Tests', `${filename}_nut.brep`);
+        const nutStlPath = path.join(__dirname, 'Tests', `${filename}_nut.stl`);
 
         // Check if files exist
         if (fs.existsSync(brepPath) && fs.existsSync(stlPath)) {
-            // Send JSON response with download URL and filename
-            res.json({ 
+            const response = { 
                 success: true,
                 filename: filename,
                 downloadUrl: `/download/${filename}.brep`,
                 previewUrl: `/preview/${filename}.stl`
-            });
+            };
+            
+            // Add nut URLs if nut was generated
+            if (generateNut && fs.existsSync(nutBrepPath) && fs.existsSync(nutStlPath)) {
+                response.nutDownloadUrl = `/download/${filename}_nut.brep`;
+                response.nutPreviewUrl = `/preview/${filename}_nut.stl`;
+                response.nutGenerated = true;
+            }
+            
+            res.json(response);
         } else {
             res.status(500).json({ error: 'Generated files not found' });
         }

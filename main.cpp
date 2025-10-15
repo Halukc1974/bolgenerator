@@ -18,12 +18,16 @@
 */
 
 #include "bolt.h"
+#include "nut.h"
 #include "export.h"
+#include <iostream>
 
 int main(int argc, char *argv[])
 {
     std::string filename = std::string(argv[1]).append(".brep");
     std::string stlFilename = std::string(argv[1]).append(".stl");
+    
+    // Create bolt
     Bolt bolt = Bolt(atof(argv[2]),  // majord
                      atof(argv[4]),  // length
                      atof(argv[3]),  // pitch
@@ -34,4 +38,28 @@ int main(int argc, char *argv[])
                      atoi(argv[9])); // headType 
     ExportBRep(bolt.Solid(), std::string("Tests/").append(filename).c_str());
     ExportSTL(bolt.Solid(), std::string("Tests/").append(stlFilename).c_str());
+    
+    // Create nut if parameters provided (argc >= 14)
+    if (argc >= 14) {
+        double nutHeight = atof(argv[10]);
+        double nutAcrossFlats = atof(argv[11]);
+        double tolerance = atof(argv[12]);
+        bool generateNut = atoi(argv[13]) == 1;
+        
+        if (generateNut && nutHeight > 0 && nutAcrossFlats > 0) {
+            std::cout << "Generating nut..." << std::endl;
+            std::string nutFilename = std::string(argv[1]).append("_nut.brep");
+            std::string nutStlFilename = std::string(argv[1]).append("_nut.stl");
+            
+            Nut nut = Nut(atof(argv[2]),  // boltMajorD
+                         atof(argv[3]),  // pitch
+                         nutHeight,
+                         nutAcrossFlats,
+                         tolerance);
+            
+            ExportBRep(nut.Solid(), std::string("Tests/").append(nutFilename).c_str());
+            ExportSTL(nut.Solid(), std::string("Tests/").append(nutStlFilename).c_str());
+            std::cout << "Nut exported successfully" << std::endl;
+        }
+    }
 }

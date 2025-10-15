@@ -68,16 +68,19 @@ void ExportSTL(TopoDS_Shape shape, Standard_CString filename)
     
     // Geometry is now in MILLIMETERS (not meters anymore)
     // FreeCAD UI default from Tessellation.ui line 306: 0.1 mm
-    Standard_Real deflection = 0.1;  // 0.1 mm (FreeCAD UI default, in millimeters)
-    Standard_Boolean relative = Standard_False;          // From Mesher.h line 249
-    Standard_Real angularDeflection = 0.5;              // From Mesher.h line 247 (28.65°)
+        Standard_Boolean relative = Standard_True;          // use relative adaptive deflection
+        Standard_Real relativeFactor = 0.001;               // 0.1% of bbox diagonal
+        Standard_Real angularDeflection = 0.25;             // angular tolerance (radians)
+
+        // Compute absolute deflection from bounding box when running in relative mode
+        Standard_Real deflection = relative ? (diagLength * relativeFactor) : 0.05;
     
     // Diagnostic output (FreeCAD style)
     std::cout << "\n=== FreeCAD MeshPart STL Export ===" << std::endl;
     std::cout << "Bounding box diagonal: " << diagLength << " mm" << std::endl;
-    std::cout << "Linear deflection: 0.1 mm (FreeCAD fixed default)" << std::endl;
-    std::cout << "Angular deflection: " << angularDeflection << " rad (28.5°)" << std::endl;
-    std::cout << "Relative mode: " << (relative ? "YES" : "NO (absolute)") << std::endl;
+        std::cout << "Linear deflection: " << deflection << " mm" << std::endl;
+        std::cout << "Angular deflection: " << angularDeflection << " rad" << std::endl;
+        std::cout << "Relative mode: " << (relative ? "YES (factor=" + std::to_string(relativeFactor) + ")" : "NO (absolute)") << std::endl;
     
     if (!shape.IsNull()) {
         std::cout << "\nShape validation:" << std::endl;

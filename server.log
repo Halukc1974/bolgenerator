@@ -1,1 +1,30 @@
 BoltGenerator web app listening at http://localhost:3000
+Received parameters: {
+  majord: '10',
+  length: '30',
+  pitch: '0.8',
+  headD1: '20',
+  headD2: '10',
+  headD3: '0',
+  headD4: '0',
+  headType: '0',
+  generateNut: '1',
+  nutHeight: '5',
+  nutAcrossFlats: '14',
+  tolerance: '0.15'
+}
+Parsed parameters: {
+  majord: 10,
+  length: 30,
+  pitch: 0.8,
+  headD1: 20,
+  headD2: 10,
+  headD3: 0,
+  headD4: 0,
+  headType: 0,
+  generateNut: true,
+  nutHeight: 5,
+  nutAcrossFlats: 14,
+  tolerance: 0.15
+}
+Executing command: ./scim_bolts bolt_1760535672473 10 0.8 30 20 10 0 0 0 5 14 0.15 1

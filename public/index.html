@@ -144,9 +144,6 @@
             padding: 15px;
             background-color: #f8f8f8;
             border-top: 1px solid #ddd;
-            display: flex;
-            gap: 10px;
-            align-items: center;
         }
         .download-btn {
             background-color: #FF9800;
@@ -225,6 +222,37 @@
                     <small id="headD4Help">How deep the hex socket goes into the head</small>
                 </div>
 
+                <hr style="margin: 20px 0; border: 1px solid #ddd;">
+                
+                <h3 style="margin: 20px 0 15px 0;">Nut Generation (Optional)</h3>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="generateNut" name="generateNut" value="1">
+                        Generate Matching Nut
+                    </label>
+                </div>
+
+                <div id="nutParameters" style="opacity: 0.5; pointer-events: none;">
+                    <div class="form-group">
+                        <label for="nutHeight">Nut Height (mm):</label>
+                        <input type="number" id="nutHeight" name="nutHeight" step="0.01" value="5">
+                        <small>Typical: M6=5mm, M10=8mm, M16=13mm, M20=16mm</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nutAcrossFlats">Nut Across Flats (mm):</label>
+                        <input type="number" id="nutAcrossFlats" name="nutAcrossFlats" step="0.01" value="10">
+                        <small>Hex size - should be larger than bolt diameter</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tolerance">Tolerance (mm):</label>
+                        <input type="number" id="tolerance" name="tolerance" step="0.01" value="0.15">
+                        <small style="font-weight: bold;">Recommended: M6→0.1, M10→0.15, M16→0.2, M20→0.25</small>
+                    </div>
+                </div>
+
                 <button type="submit">Generate Bolt</button>
             </form>
 
@@ -253,15 +281,29 @@
             </div>
 
             <div id="downloadSection" class="download-section" style="display: none;">
-                <a id="downloadBrepLink" href="#" download="bolt.brep" class="download-btn">⬇ Download BREP</a>
-                <a id="downloadStlLink" href="#" download="bolt.stl" class="download-btn stl">⬇ Download STL</a>
+                <div style="margin-bottom: 10px;">
+                    <strong>Bolt Files:</strong>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <a id="downloadBrepLink" href="#" download="bolt.brep" class="download-btn">⬇ BREP</a>
+                        <a id="downloadStlLink" href="#" download="bolt.stl" class="download-btn stl">⬇ STL</a>
+                    </div>
+                </div>
+                <div id="nutDownloadSection" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                    <strong>Nut Files:</strong>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <a id="downloadNutBrepLink" href="#" download="bolt_nut.brep" class="download-btn">⬇ BREP</a>
+                        <a id="downloadNutStlLink" href="#" download="bolt_nut.stl" class="download-btn stl">⬇ STL</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let scene, camera, renderer, controls, model, axesHelper;
+        let scene, camera, renderer, controls, boltModel, nutModel, axesHelper;
         let isWireframe = false;
+        let boltLength = 30; // Will be updated when bolt is generated
+        let headHeight = 6.5; // Will be updated when bolt is generated
 
         function init3DViewer() {
             // Scene
@@ -315,8 +357,16 @@
         }
 
         function fitToView() {
-            if (model) {
-                const box = new THREE.Box3().setFromObject(model);
+            // Create bounding box for all models
+            const box = new THREE.Box3();
+            if (boltModel) {
+                box.setFromObject(boltModel);
+            }
+            if (nutModel) {
+                box.expandByObject(nutModel);
+            }
+            
+            if (!box.isEmpty()) {
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
 
@@ -335,13 +385,20 @@
         }
 
         function setTopView() {
-            if (model) {
-                const box = new THREE.Box3().setFromObject(model);
+            const box = new THREE.Box3();
+            if (boltModel) {
+                box.setFromObject(boltModel);
+            }
+            if (nutModel) {
+                box.expandByObject(nutModel);
+            }
+            
+            if (!box.isEmpty()) {
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
                 
-                camera.position.set(center.x, center.y + maxDim * 2, center.z);
+                camera.position.set(center.x, center.y, center.z + maxDim * 2);
                 camera.lookAt(center);
                 controls.target.copy(center);
                 controls.update();
@@ -349,8 +406,15 @@
         }
 
         function setFrontView() {
-            if (model) {
-                const box = new THREE.Box3().setFromObject(model);
+            const box = new THREE.Box3();
+            if (boltModel) {
+                box.setFromObject(boltModel);
+            }
+            if (nutModel) {
+                box.expandByObject(nutModel);
+            }
+            
+            if (!box.isEmpty()) {
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
@@ -363,8 +427,15 @@
         }
 
         function setSideView() {
-            if (model) {
-                const box = new THREE.Box3().setFromObject(model);
+            const box = new THREE.Box3();
+            if (boltModel) {
+                box.setFromObject(boltModel);
+            }
+            if (nutModel) {
+                box.expandByObject(nutModel);
+            }
+            
+            if (!box.isEmpty()) {
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
@@ -377,8 +448,15 @@
         }
 
         function setIsoView() {
-            if (model) {
-                const box = new THREE.Box3().setFromObject(model);
+            const box = new THREE.Box3();
+            if (boltModel) {
+                box.setFromObject(boltModel);
+            }
+            if (nutModel) {
+                box.expandByObject(nutModel);
+            }
+            
+            if (!box.isEmpty()) {
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
@@ -392,13 +470,20 @@
         }
 
         function toggleWireframe() {
-            if (model) {
-                model.traverse(function(child) {
+            isWireframe = !isWireframe;
+            if (boltModel) {
+                boltModel.traverse(function(child) {
                     if (child.isMesh) {
-                        child.material.wireframe = !child.material.wireframe;
+                        child.material.wireframe = isWireframe;
                     }
                 });
-                isWireframe = !isWireframe;
+            }
+            if (nutModel) {
+                nutModel.traverse(function(child) {
+                    if (child.isMesh) {
+                        child.material.wireframe = isWireframe;
+                    }
+                });
             }
         }
 
@@ -410,12 +495,14 @@
             }
         }
 
-        function loadSTLModel(stlUrl) {
+        function loadSTLModel(stlUrl, nutStlUrl) {
             const loader = new THREE.STLLoader();
+            
+            // Load bolt
             loader.load(stlUrl, function(geometry) {
-                // Remove previous model
-                if (model) {
-                    scene.remove(model);
+                // Remove previous bolt model
+                if (boltModel) {
+                    scene.remove(boltModel);
                 }
 
                 // Create material
@@ -427,21 +514,94 @@
                 });
 
                 // Create mesh
-                model = new THREE.Mesh(geometry, material);
+                boltModel = new THREE.Mesh(geometry, material);
 
                 // Center the model
                 geometry.computeBoundingBox();
                 const center = geometry.boundingBox.getCenter(new THREE.Vector3());
-                model.position.sub(center);
+                boltModel.position.sub(center);
 
-                scene.add(model);
+                scene.add(boltModel);
                 
-                // Automatically fit to view after loading
+                console.log('Bolt loaded successfully');
+                
+                // Load nut if provided
+                if (nutStlUrl) {
+                    loadNutModel(nutStlUrl);
+                } else {
+                    // Remove previous nut if any
+                    if (nutModel) {
+                        scene.remove(nutModel);
+                        nutModel = null;
+                    }
+                    // Fit to view after loading
+                    setTimeout(() => fitToView(), 100);
+                }
+            }, function(progress) {
+                console.log('Loading bolt STL: ', (progress.loaded / progress.total * 100) + '%');
+            }, function(error) {
+                console.error('Error loading bolt STL:', error);
+            });
+        }
+        
+        function loadNutModel(nutStlUrl) {
+            console.log('loadNutModel called with URL:', nutStlUrl);
+            const loader = new THREE.STLLoader();
+            loader.load(nutStlUrl, function(geometry) {
+                console.log('Nut STL loaded, geometry:', geometry);
+                // Remove previous nut model
+                if (nutModel) {
+                    scene.remove(nutModel);
+                }
+
+                // Create material (slightly different color for nut)
+                const material = new THREE.MeshPhongMaterial({
+                    color: 0xA0A0A0,
+                    specular: 0x111111,
+                    shininess: 200,
+                    wireframe: isWireframe
+                });
+
+                // Create mesh
+                nutModel = new THREE.Mesh(geometry, material);
+
+                // Center nut horizontally, position at middle of bolt length
+                geometry.computeBoundingBox();
+                const nutCenter = geometry.boundingBox.getCenter(new THREE.Vector3());
+                const nutHeightMesh = geometry.boundingBox.max.z - geometry.boundingBox.min.z;
+                
+                console.log('Nut bounding box:', geometry.boundingBox);
+                console.log('Nut center:', nutCenter);
+                console.log('Nut height:', nutHeightMesh);
+                console.log('Bolt length:', boltLength);
+                console.log('Head height:', headHeight);
+                
+                // Position nut along bolt shaft, NEAR the head
+                // Bolt coordinate system:
+                //   - Head is at negative Z (around -headHeight)
+                //   - Shaft extends in positive Z direction
+                // Nut should be positioned: -(headHeight + boltLength/2)
+                // This places it halfway down the shaft, on the negative Z side
+                const nutZPosition = -(headHeight + (boltLength / 2));
+                
+                nutModel.position.set(
+                    -nutCenter.x,  // Center horizontally
+                    -nutCenter.y,  // Center horizontally
+                    nutZPosition - nutCenter.z  // Position at -(head + length/2)
+                );
+                
+                console.log('Nut Z position calculated:', nutZPosition);
+                console.log('Nut positioned at:', nutModel.position);
+
+                scene.add(nutModel);
+                console.log('Nut added to scene. Scene children:', scene.children.length);
+                
+                // Fit to view after loading both
                 setTimeout(() => fitToView(), 100);
             }, function(progress) {
-                console.log('Loading STL: ', (progress.loaded / progress.total * 100) + '%');
+                console.log('Loading nut STL: ', (progress.loaded / progress.total * 100) + '%');
             }, function(error) {
-                console.error('Error loading STL:', error);
+                console.error('Error loading nut STL:', error);
             });
         }
 
@@ -503,6 +663,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateHeadLabels();
             document.getElementById('headType').addEventListener('change', updateHeadLabels);
+            
+            // Handle nut checkbox
+            const generateNutCheckbox = document.getElementById('generateNut');
+            const nutParameters = document.getElementById('nutParameters');
+            
+            generateNutCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    nutParameters.style.opacity = '1';
+                    nutParameters.style.pointerEvents = 'auto';
+                } else {
+                    nutParameters.style.opacity = '0.5';
+                    nutParameters.style.pointerEvents = 'none';
+                }
+            });
         });
 
         document.getElementById('boltForm').addEventListener('submit', async (e) => {
@@ -510,11 +684,18 @@
 
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
+            
+            // Handle checkbox - if not checked, formData won't include it
+            if (!data.generateNut) {
+                data.generateNut = '0';
+            }
+            
+            console.log('Submitting form data:', data);
 
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
             resultDiv.className = 'result';
-            resultDiv.textContent = 'Generating bolt...';
+            resultDiv.textContent = data.generateNut === '1' ? 'Generating bolt and nut...' : 'Generating bolt...';
 
             try {
                 const response = await fetch('/generate', {
@@ -527,9 +708,10 @@
 
                 if (response.ok) {
                     const result = await response.json();
+                    console.log('Server response:', result);
                     
                     if (result.success) {
-                        // Update download links
+                        // Update bolt download links
                         const downloadBrepLink = document.getElementById('downloadBrepLink');
                         const downloadStlLink = document.getElementById('downloadStlLink');
                         
@@ -540,13 +722,37 @@
                         downloadStlLink.download = `${result.filename}.stl`;
 
                         // Show download section
-                        document.getElementById('downloadSection').style.display = 'flex';
+                        document.getElementById('downloadSection').style.display = 'block';
+                        
+                        // Handle nut files if generated
+                        if (result.nutGenerated) {
+                            const nutDownloadSection = document.getElementById('nutDownloadSection');
+                            const downloadNutBrepLink = document.getElementById('downloadNutBrepLink');
+                            const downloadNutStlLink = document.getElementById('downloadNutStlLink');
+                            
+                            downloadNutBrepLink.href = result.nutDownloadUrl;
+                            downloadNutBrepLink.download = `${result.filename}_nut.brep`;
+                            
+                            downloadNutStlLink.href = result.nutPreviewUrl;
+                            downloadNutStlLink.download = `${result.filename}_nut.stl`;
+                            
+                            nutDownloadSection.style.display = 'block';
+                            
+                            resultDiv.className = 'result success';
+                            resultDiv.textContent = 'Bolt and nut generated successfully! Loading 3D preview...';
+                        } else {
+                            document.getElementById('nutDownloadSection').style.display = 'none';
+                            resultDiv.className = 'result success';
+                            resultDiv.textContent = 'Bolt generated successfully! Loading 3D preview...';
+                        }
 
-                        resultDiv.className = 'result success';
-                        resultDiv.textContent = 'Bolt generated successfully! Loading 3D preview...';
-
-                        // Load STL for 3D preview
-                        loadSTLModel(result.previewUrl);
+                        // Store bolt dimensions for nut positioning
+                        boltLength = parseFloat(data.length) || 30;
+                        headHeight = parseFloat(data.headD2) || 6.5;
+                        
+                        // Load STL for 3D preview (and nut if generated)
+                        const nutUrl = result.nutGenerated ? result.nutPreviewUrl : null;
+                        loadSTLModel(result.previewUrl, nutUrl);
                     } else {
                         resultDiv.className = 'result error';
                         resultDiv.textContent = `Error: ${result.error || 'Unknown error'}`;
@@ -557,6 +763,7 @@
                     resultDiv.textContent = `Error: ${error.error}`;
                 }
             } catch (error) {
+                console.error('Fetch error:', error);
                 resultDiv.className = 'result error';
                 resultDiv.textContent = `Error: ${error.message}`;
             }

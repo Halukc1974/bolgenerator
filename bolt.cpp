@@ -1,174 +1,173 @@
-/*
-    BoltGenerator is an automated CAD assistant which produces standard-size 3D
-    bolts per ISO and ASME specifications.
-    Copyright (C) 2021  Scimulate LLC <solvers@scimulate.com>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
-
 #include "bolt.h"
 #include <stdexcept>
-#include <iostream>
+#include <vector>
+#include <cmath>
+#include <BRepGProp.hxx>
+#include <GProp_GProps.hxx>
+#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepBuilderAPI_Transform.hxx>
+#include <BRepAlgoAPI_Fuse.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopoDS.hxx>
+#include <gp_Trsf.hxx>
+#include <gp_Ax1.hxx>
+#include <gp_Dir.hxx>
+#include <gp_Pnt.hxx>
 
-Bolt::Bolt(double majord_, 
+Bolt::Bolt(double majord_,
            double length_,
            double pitch_,
            double headD1_,
            double headD2_,
            double headD3_,
            double headD4_,
-           int headType_): majord(majord_),
-                            length(length_),
-                            pitch(pitch_),
-                            headD1(headD1_), // Head Diameter or Across Flats
-                            headD2(headD2_), // Head Height
-                            headD3(headD3_), // Socket Size (across flats)
-                            headD4(headD4_), // Socket Depth
-                            headType(headType_)
+           int headType_)
+    : majord(majord_),
+      length(length_),
+      pitch(pitch_),
+      headD1(headD1_),
+      headD2(headD2_),
+      headD3(headD3_),
+      headD4(headD4_),
+      headType(headType_)
 {
-    TopExp_Explorer map(BRepAlgoAPI_Fuse(Shank(),
-                                         Head()),
-                        TopAbs_SOLID);
-    body = TopoDS::Solid(map.Current());
+    TopoDS_Solid shank = Shank();
+
+    // Rotate shank 180 degrees around X axis to point chamfered end down
+    gp_Trsf rotateShank;
+    rotateShank.SetRotation(gp_Ax1(gp_Pnt(0.0, 0.0, 0.5 * length), gp_Dir(1.0, 0.0, 0.0)), M_PI);
+    shank = TopoDS::Solid(BRepBuilderAPI_Transform(shank, rotateShank).Shape());
+
+    TopoDS_Solid head = Head();
+
+    // Place head just above the shank
+    const double fuseOverlap = (length > 0.2) ? 0.1 : 0.5 * length;
+    gp_Trsf headPlacement;
+    headPlacement.SetTranslation(gp_Vec(0.0, 0.0, length - fuseOverlap));
+    TopoDS_Solid placedHead = TopoDS::Solid(BRepBuilderAPI_Transform(head, headPlacement).Shape());
+
+    BRepAlgoAPI_Fuse fuseOp(shank, placedHead);
+    fuseOp.Build();
+
+    std::vector<TopoDS_Solid> fusedSolids;
+    for (TopExp_Explorer map(fuseOp.Shape(), TopAbs_SOLID); map.More(); map.Next()) {
+        fusedSolids.push_back(TopoDS::Solid(map.Current()));
+    }
+
+    if (fusedSolids.empty()) {
+        throw std::runtime_error("Fuse produced no solids");
+    }
+
+    // Select largest volume solid
+    double maxVolume = -1.0;
+    TopoDS_Solid selected = fusedSolids.front();
+    for (const auto& solid : fusedSolids) {
+        GProp_GProps props;
+        BRepGProp::VolumeProperties(solid, props);
+        double vol = props.Mass();
+        if (vol > maxVolume) {
+            maxVolume = vol;
+            selected = solid;
+        }
+    }
+
+    body = selected;
 }
+
+
+TopoDS_Solid Bolt::Solid() {
+    return body;
+}
+
 
 TopoDS_Solid Bolt::Shank()
 {
     TopoDS_Solid mask, shank, thread;
     gp_Trsf offset;
 
-    // The geometry kernel has issues building threads unevenly. The applied
-    // work-around creates an integer number of complete threads, later trimmed.
-    // Add extra length (2*pitch) to clean up partial threads.
-    // Round up to nearest full thread.
-    double nthreads = std::ceil((length + 2*pitch)/pitch);
-    
-    // Start with a cylinder
-    shank = BRepPrimAPI_MakeCylinder(0.5*majord, pitch*nthreads);
+    double nthreads = std::ceil((length + 2 * pitch) / pitch);
 
-    // Create a 3D body of threads, cut them from the cylinder.
-    thread = Thread(majord-2.0*3.0/8.0*pitch, pitch, pitch*nthreads);
+    // Base cylinder
+    shank = BRepPrimAPI_MakeCylinder(0.5 * majord, pitch * nthreads);
+
+    // Threads
+    thread = Thread(majord - 2.0 * 3.0 / 8.0 * pitch, pitch, pitch * nthreads);
     shank = Cut(shank, thread);
 
-    // Remove head-side partial thread
+    // Head-side cleanup
     mask = BRepPrimAPI_MakeCylinder(majord, pitch).Solid();
     shank = Cut(shank, mask);
 
-    // Remove end-side partial thread
-    offset.SetTranslation(gp_Vec(0.0, 0.0, length+pitch));
-    mask = BRepPrimAPI_MakeCylinder(majord, nthreads*pitch-pitch-length).Solid();
+    // End cleanup
+    offset.SetTranslation(gp_Vec(0.0, 0.0, length + pitch));
+    mask = BRepPrimAPI_MakeCylinder(majord, nthreads * pitch - pitch - length).Solid();
     shank = Cut(shank, BRepBuilderAPI_Transform(mask, offset).Shape());
 
-    // Currently the shank is floating off of the origin by dz=pitch. Shift down.
+    // Shift down to align base at z=0
     offset.SetTranslation(gp_Vec(0.0, 0.0, -pitch));
     shank = TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset));
 
-    // Chamfer lead-in thread
-    double x[] = {0.5*majord-pitch,
-                  majord};
-    double z[] = {length,
-                  length-0.5*majord-pitch};
-    std::vector<gp_Pnt> points = {gp_Pnt(x[0], 0.0, z[0]),
-                                  gp_Pnt(x[1], 0.0, z[0]),
-                                  gp_Pnt(x[1], 0.0, z[1])};
+    // Chamfer
+    double x[] = {0.5 * majord - pitch, majord};
+    double z[] = {length, length - 0.5 * majord - pitch};
+    std::vector<gp_Pnt> points = {
+        gp_Pnt(x[0], 0.0, z[0]),
+        gp_Pnt(x[1], 0.0, z[0]),
+        gp_Pnt(x[1], 0.0, z[1])
+    };
     shank = Cut(shank, Chamfer(points));
 
     return shank;
 }
 
-TopoDS_Solid Bolt::Solid()
-{
-    return body;
-}
 
 TopoDS_Solid Bolt::Head()
 {
     TopoDS_Solid head;
-    gp_Trsf offset;
 
     if (headType == 0) { // Hex head
-        // headD1 = across flats, headD2 = height
-        // Validation
         if (headD1 <= 0 || headD2 <= 0) {
-            throw std::runtime_error("Hex head: D1 (across flats) and D2 (height) must be positive");
+            throw std::runtime_error("Hex head: invalid dimensions");
         }
-        // Create hexagonal prism directly
         head = Hexagon(headD1, headD2);
-        
-    } else if (headType == 1) { // Socket head (cylinder with hex socket)
-        // headD1 = outer diameter, headD2 = height
-        // headD3 = socket size (across flats), headD4 = socket depth
-        
-        // Validation
-        if (headD1 <= 0 || headD2 <= 0) {
-            throw std::runtime_error("Socket head: D1 (outer diameter) and D2 (height) must be positive");
+    }
+    else if (headType == 1) { // Socket head (cylinder + hex socket)
+        if (headD1 <= 0 || headD2 <= 0 || headD3 <= 0 || headD4 <= 0) {
+            throw std::runtime_error("Socket head: invalid dimensions");
         }
-        if (headD3 <= 0) {
-            throw std::runtime_error("Socket head: D3 (socket size) must be positive");
-        }
-        if (headD4 <= 0) {
-            throw std::runtime_error("Socket head: D4 (socket depth) must be positive");
-        }
-        // Socket must be smaller than outer diameter
         if (headD3 >= headD1 * 0.9) {
-            throw std::runtime_error("Socket head: Socket size (D3) must be smaller than outer diameter (D1)");
+            throw std::runtime_error("Socket size (D3) must be smaller than head diameter (D1)");
         }
-        // Socket depth must not exceed head height
         if (headD4 > headD2) {
-            throw std::runtime_error("Socket head: Socket depth (D4) cannot exceed head height (D2)");
+            throw std::runtime_error("Socket depth (D4) cannot exceed head height (D2)");
         }
-        
-        // Create cylindrical head
-        head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
-        
-        // Cut hex socket from top
-        // headD3 might be radius, so use 2*headD3 for diameter (across flats)
-        double socketSize = 2.0 * headD3;
-        // Socket should go from top of head downward by headD4 depth
-        // Add small margin (0.1mm) to ensure cut, but not too much
-        double socketHeight = headD4 + 0.1;
-        
-        std::cout << "Creating hex socket: input size=" << headD3 << ", using diameter=" << socketSize << ", depth=" << headD4 << std::endl;
-        std::cout << "Socket height in model: " << socketHeight << " mm" << std::endl;
-        TopoDS_Solid socket = Hexagon(socketSize, socketHeight);
-        
-        // Position socket at exact top of head going downward
-        // Socket starts at (headD2 - socketHeight) so it ends exactly at headD2
-        double socketZ = headD2 - socketHeight;
-        std::cout << "Socket positioning: z=" << socketZ << " to z=" << headD2 << " (top of head)" << std::endl;
-        
+
+        // Head cylinder
+        head = BRepPrimAPI_MakeCylinder(0.5 * headD1, headD2);
+
+        // Create hex socket
+        const double toolHeight = headD4;
+        TopoDS_Solid socket = Hexagon(headD3, toolHeight);
+
+        // Shift socket upward (as requested)
+        const double offsetZ = headD2 - headD4;
         gp_Trsf socketOffset;
-        socketOffset.SetTranslation(gp_Vec(0.0, 0.0, socketZ));
-        TopoDS_Solid positionedSocket = TopoDS::Solid(BRepBuilderAPI_Transform(socket, socketOffset));
-        
-        std::cout << "Cutting socket from head..." << std::endl;
+        socketOffset.SetTranslation(gp_Vec(0.0, 0.0, offsetZ));
+        TopoDS_Solid positionedSocket = TopoDS::Solid(BRepBuilderAPI_Transform(socket, socketOffset).Shape());
+
+        // Cut socket from cylinder
         head = Cut(head, positionedSocket);
-        std::cout << "Cut operation completed" << std::endl;
-        
-    } else if (headType == 2) { // Flat head (simple cylinder)
-        // headD1 = diameter, headD2 = height
+    }
+    else if (headType == 2) { // Flat head
         if (headD1 <= 0 || headD2 <= 0) {
-            throw std::runtime_error("Flat head: D1 (diameter) and D2 (height) must be positive");
+            throw std::runtime_error("Flat head: invalid dimensions");
         }
-        head = BRepPrimAPI_MakeCylinder(0.5*headD1, headD2);
-        
-    } else {
-        // Default to hex
+        head = BRepPrimAPI_MakeCylinder(0.5 * headD1, headD2);
+    }
+    else {
+        // Default: hex
         head = Hexagon(headD1, headD2);
     }
 
-    offset.SetTranslation(gp_Vec(0.0, 0.0, -headD2));
-
-    return TopoDS::Solid(BRepBuilderAPI_Transform(head, offset));
+    return head;
 }

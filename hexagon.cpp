@@ -18,45 +18,34 @@
 */
 
 #include "hexagon.h"
-#include <iostream>
+
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
+#include <BRepPrimAPI_MakePrism.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Wire.hxx>
+#include <gp_Pnt.hxx>
+#include <gp_Vec.hxx>
+#include <cmath>
 
 TopoDS_Solid Hexagon(double aflats, double height)
 {
-    std::cout << "Hexagon: aflats=" << aflats << ", height=" << height << std::endl;
-    
-    // aflats = across flats (distance between parallel sides)
-    // For regular hexagon: circumradius = aflats / sqrt(3) ≈ aflats * 0.577
-    // But we need acorners (diameter across corners) = 2 * circumradius
-    double acorners = aflats * 1.1547; // aflats * 2/sqrt(3) = aflats * 1.1547
-    
-    std::cout << "Hexagon: acorners=" << acorners << ", cylinder radius=" << (0.5*acorners) << std::endl;
+    constexpr double kPi = 3.14159265358979323846;
+    const double circumradius = aflats / std::sqrt(3.0);
 
-    TopoDS_Shape mask;  // Negative space, used to remove material from head
-    TopoDS_Solid hex;   // End result, modified throughout the function
-    gp_Trsf trans, rot; // Used to transform a simple body to form mask
-
-    // Create cylindrical blank - radius should be circumradius (acorners/2)
-    BRepPrimAPI_MakeCylinder blank = BRepPrimAPI_MakeCylinder(0.5*acorners, height);
-
-    // Build the simple body used to construct mask (boxes to cut away)
-    TopoDS_Solid tool = BRepPrimAPI_MakeBox(acorners, acorners, height);
-    
-    // Rotate it about to make a hexagonal flower petal shape.
-    trans.SetTranslation(gp_Vec(-0.5*acorners, 0.5*aflats, 0.0));
-    mask = BRepBuilderAPI_Transform(tool, trans).Shape();
-    for(int step = 1; step < 6; step++)
-    {
-        rot.SetRotation(gp::OZ(), step*M_PI/3.0);
-        mask = BRepAlgoAPI_Fuse(mask, BRepBuilderAPI_Transform(BRepBuilderAPI_Transform(tool, trans).Shape(), rot)).Shape();
+    BRepBuilderAPI_MakePolygon polygon;
+    for (int i = 0; i < 6; ++i) {
+    const double angle = kPi / 6.0 + static_cast<double>(i) * (kPi / 3.0);
+        const double x = circumradius * std::cos(angle);
+        const double y = circumradius * std::sin(angle);
+        polygon.Add(gp_Pnt(x, y, 0.0));
     }
+    polygon.Close();
 
-    // Cut away the mask from blank to create hexagon
-    hex = Cut(blank, mask);
-    
-    std::cout << "Hexagon: Created hex shape, returning..." << std::endl;
-    
-    //trans.SetTranslation(gp_Vec(0.0, 0.0, -height));
-    
-    //return TopoDS::Solid(BRepBuilderAPI_Transform(hex, trans));
-    return hex;
+    TopoDS_Wire wire = polygon.Wire();
+    TopoDS_Face face = BRepBuilderAPI_MakeFace(wire);
+    TopoDS_Shape prism = BRepPrimAPI_MakePrism(face, gp_Vec(0.0, 0.0, height)).Shape();
+
+    return TopoDS::Solid(prism);
 }

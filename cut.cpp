@@ -20,6 +20,7 @@
 #include "cut.h"
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 #include <GProp_GProps.hxx>
 #include <BRepGProp.hxx>
 
@@ -41,6 +42,8 @@ TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool)
     std::cout << "Cut: Body volume before cut: " << volumeBefore << " mm³" << std::endl;
     
     BRepAlgoAPI_Cut cutOp(body, tool);
+    cutOp.SetFuzzyValue(1.0e-6);
+    cutOp.Build();
     
     if (!cutOp.IsDone()) {
         std::cerr << "ERROR: Cut operation failed!" << std::endl;
@@ -55,8 +58,19 @@ TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool)
     TopoDS_Shape result = cutOp.Shape();
     std::cout << "Cut: Result shape type: " << result.ShapeType() << std::endl;
     
+    // Collect all solids from result
+    std::vector<TopoDS_Solid> solids;
     TopExp_Explorer map(result, TopAbs_SOLID);
-    if (!map.More()) {
+    int solidCount = 0;
+    while (map.More()) {
+        solids.push_back(TopoDS::Solid(map.Current()));
+        solidCount++;
+        map.Next();
+    }
+    
+    std::cout << "Cut: Found " << solidCount << " solid(s) in result" << std::endl;
+    
+    if (solids.empty()) {
         std::cerr << "ERROR: No solid found in cut result!" << std::endl;
         // Try to return the original body instead of failing
         if (body.ShapeType() == TopAbs_SOLID) {
@@ -66,7 +80,23 @@ TopoDS_Solid Cut(TopoDS_Shape body, TopoDS_Shape tool)
         throw std::runtime_error("No solid found in cut result");
     }
     
-    TopoDS_Solid resultSolid = TopoDS::Solid(map.Current());
+    // If multiple solids, pick the one with largest volume (should be the body after cut)
+    TopoDS_Solid resultSolid = solids[0];
+    if (solids.size() > 1) {
+        std::cout << "Cut: Multiple solids found, selecting largest volume..." << std::endl;
+        double maxVolume = 0;
+        for (const auto& solid : solids) {
+            GProp_GProps props;
+            BRepGProp::VolumeProperties(solid, props);
+            double vol = props.Mass();
+            std::cout << "  Solid volume: " << vol << " mm³" << std::endl;
+            if (vol > maxVolume) {
+                maxVolume = vol;
+                resultSolid = solid;
+            }
+        }
+        std::cout << "Cut: Selected solid with volume: " << maxVolume << " mm³" << std::endl;
+    }
     
     // Calculate volume after cut
     GProp_GProps propsResult;

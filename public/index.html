@@ -565,32 +565,46 @@
                 // Create mesh
                 nutModel = new THREE.Mesh(geometry, material);
 
-                // Center nut horizontally, position at middle of bolt length
+                // Center nut horizontally and place it relative to the bolt geometry
                 geometry.computeBoundingBox();
                 const nutCenter = geometry.boundingBox.getCenter(new THREE.Vector3());
                 const nutHeightMesh = geometry.boundingBox.max.z - geometry.boundingBox.min.z;
-                
+
                 console.log('Nut bounding box:', geometry.boundingBox);
                 console.log('Nut center:', nutCenter);
                 console.log('Nut height:', nutHeightMesh);
-                console.log('Bolt length:', boltLength);
-                console.log('Head height:', headHeight);
-                
-                // Position nut along bolt shaft, NEAR the head
-                // Bolt coordinate system:
-                //   - Head is at negative Z (around -headHeight)
-                //   - Shaft extends in positive Z direction
-                // Nut should be positioned: -(headHeight + boltLength/2)
-                // This places it halfway down the shaft, on the negative Z side
-                const nutZPosition = -(headHeight + (boltLength / 2));
-                
+
+                // Compute bolt bounding box (if available) so we can position nut relative to the actual bolt geometry
+                let boltBox = null;
+                try {
+                    if (boltModel) {
+                        boltBox = new THREE.Box3().setFromObject(boltModel);
+                        console.log('Bolt bounding box for positioning:', boltBox);
+                    }
+                } catch (err) {
+                    console.warn('Could not compute bolt bounding box for nut positioning:', err);
+                }
+
+                // Determine target center Z for the nut. If bolt bbox available, place nut just above the bolt's min.z (near the head).
+                let targetCenterZ = 0;
+                if (boltBox && !boltBox.isEmpty()) {
+                    // small epsilon so nut doesn't intersect the head geometry visually
+                    const desiredBottomZ = boltBox.min.z + 0.2;
+                    targetCenterZ = desiredBottomZ + nutHeightMesh * 0.5;
+                } else {
+                    // fallback: use previous heuristic if bolt geometry not present
+                    const nutZPosition = -(headHeight + (boltLength / 2));
+                    targetCenterZ = nutZPosition;
+                }
+
+                // Position nut so its center aligns horizontally and vertically at targetCenterZ
                 nutModel.position.set(
-                    -nutCenter.x,  // Center horizontally
-                    -nutCenter.y,  // Center horizontally
-                    nutZPosition - nutCenter.z  // Position at -(head + length/2)
+                    -nutCenter.x,
+                    -nutCenter.y,
+                    targetCenterZ - nutCenter.z
                 );
-                
-                console.log('Nut Z position calculated:', nutZPosition);
+
+                console.log('Nut target center Z:', targetCenterZ);
                 console.log('Nut positioned at:', nutModel.position);
 
                 scene.add(nutModel);

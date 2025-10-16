@@ -19,6 +19,11 @@
 
 #include "export.h"
 #include <iostream>
+#include <BRepBuilderAPI_Sewing.hxx>
+#include <BRepBuilderAPI_MakeSolid.hxx>
+#include <TopoDS.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopoDS_Shell.hxx>
 
 void ExportBRep(TopoDS_Shape shape, Standard_CString filename)
 {
@@ -81,6 +86,21 @@ void ExportSTL(TopoDS_Shape shape, Standard_CString filename)
         std::cout << "Linear deflection: " << deflection << " mm" << std::endl;
         std::cout << "Angular deflection: " << angularDeflection << " rad" << std::endl;
         std::cout << "Relative mode: " << (relative ? "YES (factor=" + std::to_string(relativeFactor) + ")" : "NO (absolute)") << std::endl;
+    
+    // Repair shape to ensure closed for proper STL export
+    if (!shape.IsNull()) {
+        try {
+            double repairTol = 1e-4;
+            BRepBuilderAPI_Sewing sewer(repairTol);
+            sewer.Add(shape);
+            sewer.Perform();
+            TopoDS_Shape sewed = sewer.SewedShape();
+            
+            shape = sewed;
+        } catch(...) {
+            std::cout << "Shape repair failed, proceeding with original" << std::endl;
+        }
+    }
     
     if (!shape.IsNull()) {
         std::cout << "\nShape validation:" << std::endl;

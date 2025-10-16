@@ -24,6 +24,46 @@
 
 int main(int argc, char *argv[])
 {
+    if (argc < 4) {
+        std::cerr << "Usage for bolt: " << argv[0] << " <name> <majorD> <pitch> <length> <headD1> <headD2> <headD3> <headD4> <headType>" << std::endl;
+        std::cerr << "Usage for nut:  " << argv[0] << " <majorD> <pitch> nut <name>" << std::endl;
+        return 1;
+    }
+    
+    // Check if this is a nut creation command
+    if (argc == 5 && std::string(argv[3]) == "nut") {
+        double boltMajorD = atof(argv[1]);
+        double pitch = atof(argv[2]);
+        std::string name = argv[4];
+        
+        std::cout << "Creating nut with majorD=" << boltMajorD << ", pitch=" << pitch << std::endl;
+        
+        // Standard nut dimensions based on bolt diameter
+        double nutHeight = boltMajorD * 0.8;  // Standard nut height
+        double nutAcrossFlats = boltMajorD * 1.5;  // Standard across flats
+        double tolerance = 0.1;  // Small tolerance
+        
+        std::string nutFilename = name + "_nut.brep";
+        std::string nutStlFilename = name + "_nut.stl";
+        
+        try {
+            Nut nut = Nut(boltMajorD, pitch, nutHeight, nutAcrossFlats, tolerance);
+            ExportBRep(nut.Solid(), std::string("Tests/").append(nutFilename).c_str());
+            ExportSTL(nut.Solid(), std::string("Tests/").append(nutStlFilename).c_str());
+            std::cout << "Nut exported successfully as " << nutFilename << " and " << nutStlFilename << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "Error creating nut: " << e.what() << std::endl;
+            return 1;
+        }
+        return 0;
+    }
+    
+    // Original bolt creation code for backward compatibility
+    if (argc < 10) {
+        std::cerr << "Insufficient arguments for bolt creation" << std::endl;
+        return 1;
+    }
+    
     std::string filename = std::string(argv[1]).append(".brep");
     std::string stlFilename = std::string(argv[1]).append(".stl");
     
@@ -62,4 +102,6 @@ int main(int argc, char *argv[])
             std::cout << "Nut exported successfully" << std::endl;
         }
     }
+    
+    return 0;
 }

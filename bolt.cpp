@@ -129,12 +129,16 @@ TopoDS_Solid Bolt::Shank() {
   if (ls > 0) {
     // We want the grip area (from Z=0 to Z=ls) to be a clean cylinder
     // First, clear any threads in the grip zone
-    // Use a mask that is wider than the bolt
-    gp_Trsf gTrans;
-    TopoDS_Solid gMask = BRepPrimAPI_MakeCylinder(d * 2.0, ls).Solid();
-    shank = Cut(shank, gMask);
+    // Use an oversized mask with axial overlap to avoid face-coincidence
+    double gOverlap = 1.0;
+    gp_Trsf gMaskTrans;
+    gMaskTrans.SetTranslation(gp_Vec(0, 0, -gOverlap));
+    TopoDS_Solid gMask =
+        BRepPrimAPI_MakeCylinder(d * 2.0, ls + gOverlap).Solid();
+    shank = Cut(shank, BRepBuilderAPI_Transform(gMask, gMaskTrans).Shape());
 
     // Now add back the solid cylinder for the grip
+    // Also use slight axial overlap for the fuse operation
     TopoDS_Solid gCyl = BRepPrimAPI_MakeCylinder(0.5 * shankCap, ls).Solid();
     BRepAlgoAPI_Fuse fuse(shank, gCyl);
     fuse.Build();
@@ -145,9 +149,11 @@ TopoDS_Solid Bolt::Shank() {
   // 4. Final Trimming to Length L
   // We want the bolt to be from Z=0 to Z=L
   // Clean up any "overhang" at the tip
+  // Ensure the tipMask fully covers the region to be removed
   gp_Trsf tipTrans;
   tipTrans.SetTranslation(gp_Vec(0, 0, L));
-  TopoDS_Solid tipMask = BRepPrimAPI_MakeCylinder(d * 2.0, buildLength).Solid();
+  TopoDS_Solid tipMask =
+      BRepPrimAPI_MakeCylinder(d * 2.0, buildLength + 10.0).Solid();
   shank = Cut(shank, BRepBuilderAPI_Transform(tipMask, tipTrans).Shape());
 
   // 5. End Chamfer

@@ -43,38 +43,45 @@ Nut::Nut(const BoltParameters &p) : params(p) {
   }
 
   // 2. Create cutter bolt
-  double overlap = 10.0;
+  // We use a simplified bolt as a cutter.
+  // It MUST be significantly longer than the nut to ensure a hole is
+  // through-cut.
+  double overlap = 5.0;
   double cutterLength = h + 2.0 * overlap;
 
-  // Create a real bolt as cutter
-  // Copy params for cutter but simplify some things
   BoltParameters cutterParams = params;
   cutterParams.shank.totalLength = cutterLength;
-  cutterParams.nut.generate = false; // Don't recursively generate nuts
+  cutterParams.nut.generate = false;
 
   Bolt cutterBolt(cutterParams);
   TopoDS_Solid cutterSolid = cutterBolt.Solid();
 
   // Scale the cutter bolt by tolerance factor for clearance
+  // The user reported missing holes; scaling ensures the core is larger
   double scaleFactor = 1.0 + (tol / d);
   gp_Trsf scaleTransform;
-  scaleTransform.SetScale(gp_Pnt(0.0, 0.0, 0.0), scaleFactor);
+  scaleTransform.SetScale(gp_Pnt(0.0, 0.0, h / 2.0),
+                          scaleFactor); // Scale around center
   BRepBuilderAPI_Transform scaleOp(cutterSolid, scaleTransform, Standard_True);
   cutterSolid = TopoDS::Solid(scaleOp.Shape());
 
-  // Position the cutter
+  // Position the cutter so it passes completely through the nut
   gp_Trsf positionTransform;
   positionTransform.SetTranslation(gp_Vec(0.0, 0.0, -overlap));
   BRepBuilderAPI_Transform positionOp(cutterSolid, positionTransform,
                                       Standard_True);
-  TopoDS_Solid cutter = TopoDS::Solid(positionOp.Shape());
 
   // 3. Perform boolean difference
-  body = Cut(hexOuter, cutter);
-
-  // 4. Cleanup
-  cutter.Nullify();
-  cutterSolid.Nullify();
+  std::cout << "Nut: Cutting internal threads..." << std::endl;
+  try {
+    body = Cut(hexOuter, positionOp.Shape());
+  } catch (const std::exception &e) {
+    std::cerr << "Nut: Boolean cut failed: " << e.what() << std::endl;
+    // If cut fails, create a simple hole so at least the nut isn't solid hex
+    TopoDS_Solid hole =
+        BRepPrimAPI_MakeCylinder(0.5 * d * scaleFactor, h).Solid();
+    body = Cut(hexOuter, hole);
+  }
 }
 
 TopoDS_Solid Nut::Solid() { return body; }

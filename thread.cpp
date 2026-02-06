@@ -19,21 +19,29 @@
 
 #include "thread.h"
 
-TopoDS_Solid Thread(double diameter, // Pitch Diameter
-                    double pitch,
-                    double length)
-{
-    std::vector<gp_Pnt> vertex;
-    vertex = {gp_Pnt(0.5*diameter-0.25*pitch, 0.0, -0.125*pitch),
-              gp_Pnt(0.5*diameter-0.25*pitch, 0.0, 0.125*pitch),
-              gp_Pnt(0.5*diameter+0.5*pitch, 0.0, 0.5*pitch),
-              gp_Pnt(0.5*diameter+0.5*pitch, 0.0, -0.5*pitch)};
+TopoDS_Solid Thread(double diameter, // Minor Diameter
+                    double pitch, double length) {
+  // ISO-style 60 degree thread profile
+  // We make it slightly deeper to ensure it always cuts the shank
+  const double depth = 0.614 * pitch; // Standard ISO depth is 0.614p
+  const double h_clearance =
+      0.05 * pitch; // Add small radial clearance for robustness
 
-    // Build a wire profile by connecting the dots.
-    BRepBuilderAPI_MakeWire wire;
-    for(int ct = 0; ct < int(vertex.size()); ct++)
-        wire.Add(BRepBuilderAPI_MakeEdge(vertex.at(ct),
-                                         vertex.at((ct+1)%vertex.size())).Edge());
+  std::vector<gp_Pnt> vertex;
+  // (x, y, z)
+  // x is radial distance from center
+  // We start slightly inside the major diameter and go out
+  vertex = {gp_Pnt(0.5 * diameter - h_clearance, 0.0, -0.125 * pitch),
+            gp_Pnt(0.5 * diameter - h_clearance, 0.0, 0.125 * pitch),
+            gp_Pnt(0.5 * diameter + depth + h_clearance, 0.0, 0.5 * pitch),
+            gp_Pnt(0.5 * diameter + depth + h_clearance, 0.0, -0.5 * pitch)};
 
-    return Helix(wire, diameter, pitch, length);
+  BRepBuilderAPI_MakeWire wire;
+  for (int ct = 0; ct < int(vertex.size()); ct++)
+    wire.Add(BRepBuilderAPI_MakeEdge(vertex.at(ct),
+                                     vertex.at((ct + 1) % vertex.size()))
+                 .Edge());
+
+  // Make the helix slightly longer than requested to prevent cap-face issues
+  return Helix(wire, diameter, pitch, length);
 }

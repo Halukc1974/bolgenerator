@@ -54,7 +54,8 @@ app.post('/generate', (req, res) => {
         p.nutAcrossFlats || 0,
         p.nutHeight || 0,
         p.nutWasherFace || 0,
-        p.nutTolerance || 0.15
+        p.nutTolerance || 0.15,
+        p.edgeFilletRadius || 0.2  // Default 0.2mm edge fillet for smooth look
     ];
 
     const command = `./scim_bolts ${args.join(' ')}`;

@@ -22,10 +22,11 @@ struct HeadParameters {
 };
 
 struct ShankParameters {
-  double nominalDiameter; // d
-  double totalLength;     // L
-  double gripLength;      // ls (unthreaded part)
-  double bodyTolerance;   // tolerance on diameter
+  double nominalDiameter;  // d
+  double totalLength;      // L
+  double gripLength;       // ls (unthreaded part)
+  double bodyTolerance;    // tolerance on diameter
+  double edgeFilletRadius; // radius for smoothing all edges
 };
 
 struct ThreadParameters {

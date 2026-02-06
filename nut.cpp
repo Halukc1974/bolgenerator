@@ -88,23 +88,57 @@ Nut::Nut(const BoltParameters &p) : params(p) {
   }
 
   // 4. Apply edge fillet for smooth edges
-  if (params.nut.edgeFilletRadius > 0.01) {
+  // SAFE FILLET ALGORITHM: Validate radius against geometry to prevent
+  // corruption
+  double filletRadius = params.nut.edgeFilletRadius;
+  if (filletRadius > 0.01) {
+    // Clamp fillet radius to safe maximum (10% of nut width across flats)
+    double maxSafeRadius = s * 0.1;
+    if (filletRadius > maxSafeRadius) {
+      std::cout << "Nut Fillet: Clamping radius from " << filletRadius
+                << " to safe max " << maxSafeRadius << std::endl;
+      filletRadius = maxSafeRadius;
+    }
+
     try {
-      std::cout << "Nut: Applying edge fillet radius: "
-                << params.nut.edgeFilletRadius << std::endl;
+      std::cout << "Nut: Applying safe edge fillet radius: " << filletRadius
+                << std::endl;
       BRepFilletAPI_MakeFillet fillet(body);
+      int edgesAdded = 0;
+
       for (TopExp_Explorer ex(body, TopAbs_EDGE); ex.More(); ex.Next()) {
         TopoDS_Edge edge = TopoDS::Edge(ex.Current());
-        fillet.Add(params.nut.edgeFilletRadius, edge);
+
+        // Calculate edge length to validate if fillet is safe
+        GProp_GProps edgeProps;
+        BRepGProp::LinearProperties(edge, edgeProps);
+        double edgeLength = edgeProps.Mass(); // Length of edge
+
+        // Only apply fillet if edge is long enough (at least 4x the radius)
+        if (edgeLength > filletRadius * 4.0) {
+          fillet.Add(filletRadius, edge);
+          edgesAdded++;
+        }
       }
-      fillet.Build();
-      if (fillet.IsDone()) {
-        body = TopoDS::Solid(fillet.Shape());
-        std::cout << "Nut: Edge fillet applied successfully" << std::endl;
+
+      std::cout << "Nut Fillet: Added to " << edgesAdded << " edges"
+                << std::endl;
+
+      if (edgesAdded > 0) {
+        fillet.Build();
+        if (fillet.IsDone()) {
+          body = TopoDS::Solid(fillet.Shape());
+          std::cout << "Nut: Edge fillet applied successfully" << std::endl;
+        } else {
+          std::cerr << "Nut Fillet: Build incomplete, keeping original geometry"
+                    << std::endl;
+        }
+      } else {
+        std::cout << "Nut Fillet: No suitable edges found, skipping"
+                  << std::endl;
       }
     } catch (...) {
-      std::cerr << "Nut: Edge fillet failed, continuing without fillet"
-                << std::endl;
+      std::cerr << "Nut Fillet failed, keeping original geometry" << std::endl;
     }
   }
 }

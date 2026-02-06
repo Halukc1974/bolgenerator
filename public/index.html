@@ -318,9 +318,10 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label title="Smooth edges like real bolts (0.1-0.5mm recommended)">Edge Fillet Radius
+                            <label title="Smooth edges (auto-clamped to safe max ~10% of diameter)">Edge Fillet
                                 (mm)</label>
-                            <input type="number" name="edgeFilletRadius" step="0.05" value="0.2" min="0" max="2">
+                            <input type="number" name="edgeFilletRadius" step="0.05" value="0.3" min="0" max="2">
+                            <span style="font-size: 0.65rem; color: var(--text-muted);">Safe max: ~10% of ⌀d</span>
                         </div>
                     </div>
                 </div>
@@ -382,9 +383,10 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label title="Smooth nut edges like real parts (0.1-0.5mm recommended)">Nut Edge Fillet
+                            <label title="Smooth nut edges (auto-clamped to safe max ~10% of width)">Nut Edge Fillet
                                 (mm)</label>
-                            <input type="number" name="nutEdgeFilletRadius" step="0.05" value="0.2" min="0" max="2">
+                            <input type="number" name="nutEdgeFilletRadius" step="0.05" value="0.3" min="0" max="2">
+                            <span style="font-size: 0.65rem; color: var(--text-muted);">Safe max: ~10% of AF</span>
                         </div>
                     </div>
                 </div>

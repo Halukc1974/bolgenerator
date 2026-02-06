@@ -31,7 +31,15 @@ app.post('/generate', (req, res) => {
 
     // Ensure grip is never > L - 2*pitch
     const clampedGrip = Math.min(grip, L - (2 * pitch));
-    const clampedPitch = Math.max(0.2, Math.min(pitch, d * 0.4));
+    // Clamp pitch to safe range (1.0 to max based on diameter)
+    const clampedPitch = Math.max(1.0, Math.min(p.pitch || 1.75, d * 0.2));
+
+    // Clamp fillet radii to safe maximum (10% of relevant dimension)
+    // This prevents geometry corruption from oversized fillets
+    const maxBoltFillet = d * 0.1;
+    const maxNutFillet = (p.nutAcrossFlats || d * 1.5) * 0.1;
+    const clampedBoltFillet = Math.max(0, Math.min(p.edgeFilletRadius || 0.2, maxBoltFillet));
+    const clampedNutFillet = Math.max(0, Math.min(p.nutEdgeFilletRadius || 0.2, maxNutFillet));
 
     const args = [
         filename,
@@ -55,8 +63,8 @@ app.post('/generate', (req, res) => {
         p.nutHeight || 0,
         p.nutWasherFace || 0,
         p.nutTolerance || 0.15,
-        p.edgeFilletRadius || 0.2,  // Bolt edge fillet
-        p.nutEdgeFilletRadius || 0.2  // Nut edge fillet
+        clampedBoltFillet,  // Safe bolt edge fillet
+        clampedNutFillet    // Safe nut edge fillet
     ];
 
     const command = `./scim_bolts ${args.join(' ')}`;

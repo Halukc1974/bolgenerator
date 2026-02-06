@@ -150,7 +150,7 @@ TopoDS_Solid Bolt::Shank() {
 
   // Shift down to align base at z=0
   offset.SetTranslation(gp_Vec(0.0, 0.0, -p));
-  shank = TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset));
+  shank = TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset).Shape());
 
   // End Chamfer
   double x[] = {0.5 * d - p, d};

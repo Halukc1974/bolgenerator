@@ -433,24 +433,34 @@
             let valid = true;
 
             // Pitch validation
-            const p = parseFloat(formData.get('threadPitch'));
+            const pInput = document.getElementsByName('threadPitch')[0];
+            const p = parseFloat(pInput.value);
             const pMsg = document.getElementById('msg-threadPitch');
             if (p > d * 0.3) {
-                pMsg.textContent = "⚠️ Pitch too large for diameter";
+                pMsg.textContent = "⚠️ Pitch is very coarse for this diameter";
                 pMsg.className = "val-msg val-warning";
             } else if (p < d * 0.05) {
-                pMsg.textContent = "⚠️ Pitch very fine";
+                pMsg.textContent = "⚠️ Pitch is very fine";
                 pMsg.className = "val-msg val-warning";
             } else { pMsg.className = "val-msg"; }
 
             // Grip length validation
-            const ls = parseFloat(formData.get('gripLength'));
+            const lsInput = document.getElementsByName('gripLength')[0];
+            const ls = parseFloat(lsInput.value);
             const lsMsg = document.getElementById('msg-gripLength');
-            if (ls >= L) {
-                lsMsg.textContent = "❌ Must be less than Total Length";
+            if (ls >= L - (2 * p)) {
+                lsMsg.textContent = "❌ Grip must be smaller (Total - 2*Pitch)";
+                lsMsg.className = "val-msg val-error";
+                lsInput.style.borderColor = "var(--error)";
+                valid = false;
+            } else if (ls < 0) {
+                lsMsg.textContent = "❌ Cannot be negative";
                 lsMsg.className = "val-msg val-error";
                 valid = false;
-            } else { lsMsg.className = "val-msg"; }
+            } else {
+                lsMsg.className = "val-msg";
+                lsInput.style.borderColor = "var(--border)";
+            }
 
             return valid;
         }

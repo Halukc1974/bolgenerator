@@ -23,6 +23,16 @@ app.post('/generate', (req, res) => {
     const filename = `bolt_${Date.now()}`;
 
     // Map frontend fields to CLI arguments (Matching main.cpp order)
+    // Clamping and validation for robustness
+    const L = parseFloat(p.totalLength) || 10;
+    const grip = parseFloat(p.gripLength) || 0;
+    const pitch = parseFloat(p.threadPitch) || 1.25;
+    const d = parseFloat(p.nominalDiameter) || 8;
+
+    // Ensure grip is never > L - 2*pitch
+    const clampedGrip = Math.min(grip, L - (2 * pitch));
+    const clampedPitch = Math.max(0.2, Math.min(pitch, d * 0.4));
+
     const args = [
         filename,
         p.headType || 0,
@@ -33,18 +43,18 @@ app.post('/generate', (req, res) => {
         p.underheadFilletRadius || 0,
         p.socketSize || 0,
         p.socketDepth || 0,
-        p.nominalDiameter || 0,
-        p.totalLength || 0,
-        p.gripLength || 0,
+        d,
+        L,
+        clampedGrip,
         p.bodyTolerance || 0,
-        p.majorDiameter || 0,
-        p.threadPitch || 0,
+        p.majorDiameter || d,
+        clampedPitch,
         p.minorDiameter || 0,
         p.generateNut ? 1 : 0,
         p.nutAcrossFlats || 0,
         p.nutHeight || 0,
         p.nutWasherFace || 0,
-        p.nutTolerance || 0
+        p.nutTolerance || 0.15
     ];
 
     const command = `./scim_bolts ${args.join(' ')}`;

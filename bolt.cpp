@@ -105,62 +105,62 @@ TopoDS_Solid Bolt::Shank() {
   double p = params.thread.pitch;
   double L = params.shank.totalLength;
 
-  // Ensure body tolerance is applied if specified
+  // Clamp grip length to be at most total length - 2*pitch (safety)
+  double ls = std::max(0.0, std::min(params.shank.gripLength, L - 2.0 * p));
   double shankCap = d - params.shank.bodyTolerance;
 
-  double nthreads = std::ceil((L + 2 * p) / p);
+  // We build everything slightly longer and then trim to exact length L
+  // This avoids face-coincidence artifacts
+  double buildLength = L + 4.0 * p;
 
-  // Base cylinder (shank)
-  shank = BRepPrimAPI_MakeCylinder(0.5 * shankCap, p * nthreads);
+  // 1. Base cylinder
+  shank = BRepPrimAPI_MakeCylinder(0.5 * shankCap, buildLength).Solid();
 
-  // Threads
-  // Minor diameter is roughly major - 1.082 * pitch for 60 deg threads
+  // 2. Threading
   double minorD = (params.thread.minorDiameter > 0)
                       ? params.thread.minorDiameter
-                      : (d - 1.08 * p);
-  thread = Thread(minorD, p, p * nthreads);
+                      : (d - 1.0825 * p);
+  thread = Thread(minorD, p, buildLength);
+
+  // Cut threads along the build length
   shank = Cut(shank, thread);
 
-  // Head-side cleanup (create unthreaded grip length if requested)
-  if (params.shank.gripLength > 0) {
-    // Cut threads from the grip section and replace with solid cylinder
-    gp_Trsf gripOffset;
-    gripOffset.SetTranslation(
-        gp_Vec(0.0, 0.0, p * nthreads - params.shank.gripLength));
-    TopoDS_Solid gripMask =
-        BRepPrimAPI_MakeCylinder(d, params.shank.gripLength).Solid();
-    shank = Cut(shank, BRepBuilderAPI_Transform(gripMask, gripOffset).Shape());
+  // 3. Grip Handling (Unthreaded part near the head)
+  if (ls > 0) {
+    // We want the grip area (from Z=0 to Z=ls) to be a clean cylinder
+    // First, clear any threads in the grip zone
+    // Use a mask that is wider than the bolt
+    gp_Trsf gTrans;
+    TopoDS_Solid gMask = BRepPrimAPI_MakeCylinder(d * 2.0, ls).Solid();
+    shank = Cut(shank, gMask);
 
-    TopoDS_Solid gripCylinder =
-        BRepPrimAPI_MakeCylinder(0.5 * shankCap, params.shank.gripLength)
-            .Solid();
-    BRepAlgoAPI_Fuse gripFuse(
-        shank, BRepBuilderAPI_Transform(gripCylinder, gripOffset).Shape());
-    gripFuse.Build();
-    shank = TopoDS::Solid(gripFuse.Shape());
+    // Now add back the solid cylinder for the grip
+    TopoDS_Solid gCyl = BRepPrimAPI_MakeCylinder(0.5 * shankCap, ls).Solid();
+    BRepAlgoAPI_Fuse fuse(shank, gCyl);
+    fuse.Build();
+    if (fuse.IsDone())
+      shank = TopoDS::Solid(fuse.Shape());
   }
 
-  // Top and bottom cleanup
-  mask = BRepPrimAPI_MakeCylinder(d, p).Solid();
-  shank = Cut(shank, mask);
-
-  offset.SetTranslation(gp_Vec(0.0, 0.0, L + p));
-  mask = BRepPrimAPI_MakeCylinder(d, nthreads * p - p - L).Solid();
-  shank = Cut(shank, BRepBuilderAPI_Transform(mask, offset).Shape());
-
-  // Shift down to align base at z=0
-  offset.SetTranslation(gp_Vec(0.0, 0.0, -p));
-  shank = TopoDS::Solid(BRepBuilderAPI_Transform(shank, offset).Shape());
-
-  // End Chamfer
-  double x[] = {0.5 * d - p, d};
-  double z[] = {L, L - 0.5 * d - p};
-  std::vector<gp_Pnt> points = {gp_Pnt(x[0], 0.0, z[0]),
-                                gp_Pnt(x[1], 0.0, z[0]),
-                                gp_Pnt(x[1], 0.0, z[1])};
-  shank = Cut(shank, Chamfer(points));
+  // 4. Final Trimming to Length L
+  // We want the bolt to be from Z=0 to Z=L
+  // Clean up any "overhang" at the tip
+  gp_Trsf tipTrans;
+  tipTrans.SetTranslation(gp_Vec(0, 0, L));
+  TopoDS_Solid tipMask = BRepPrimAPI_MakeCylinder(d * 2.0, buildLength).Solid();
+  shank = Cut(shank, BRepBuilderAPI_Transform(tipMask, tipTrans).Shape());
 
   return shank;
+}
+
+// End Chamfer
+double x[] = {0.5 * d - p, d};
+double z[] = {L, L - 0.5 * d - p};
+std::vector<gp_Pnt> points = {gp_Pnt(x[0], 0.0, z[0]), gp_Pnt(x[1], 0.0, z[0]),
+                              gp_Pnt(x[1], 0.0, z[1])};
+shank = Cut(shank, Chamfer(points));
+
+return shank;
 }
 
 TopoDS_Solid Bolt::Head() {

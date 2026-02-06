@@ -16,6 +16,7 @@
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -98,73 +99,99 @@ Bolt::Bolt(const BoltParameters &p) : params(p) {
 TopoDS_Solid Bolt::Solid() { return body; }
 
 TopoDS_Solid Bolt::Shank() {
-  TopoDS_Solid mask, shank, thread;
-  gp_Trsf offset;
-
   double d = params.thread.majorDiameter;
   double p = params.thread.pitch;
   double L = params.shank.totalLength;
-
-  // Clamp grip length to be at most total length - 2*pitch (safety)
-  double ls = std::max(0.0, std::min(params.shank.gripLength, L - 2.0 * p));
   double shankCap = d - params.shank.bodyTolerance;
 
-  // We build everything slightly longer and then trim to exact length L
-  // This avoids face-coincidence artifacts
-  double buildLength = L + 4.0 * p;
+  // Clamp grip length safely
+  double ls = std::max(0.0, std::min(params.shank.gripLength, L - 3.0 * p));
+  double threadedLength = L - ls;
 
-  // 1. Base cylinder
-  shank = BRepPrimAPI_MakeCylinder(0.5 * shankCap, buildLength).Solid();
+  std::cout << "Shank: L=" << L << " ls=" << ls
+            << " threadedL=" << threadedLength << std::endl;
 
-  // 2. Threading
+  TopoDS_Solid result;
+
+  if (threadedLength < p) {
+    // If threaded section is too short, just make a plain cylinder
+    std::cout << "Shank: Threaded section too short, making plain cylinder"
+              << std::endl;
+    result = BRepPrimAPI_MakeCylinder(0.5 * shankCap, L).Solid();
+    return result;
+  }
+
+  // 1. Create the unthreaded grip section (if any)
+  TopoDS_Solid gripPart;
+  bool hasGrip = (ls > 0.1);
+
+  if (hasGrip) {
+    std::cout << "Shank: Creating grip section of length " << ls << std::endl;
+    gripPart = BRepPrimAPI_MakeCylinder(0.5 * shankCap, ls).Solid();
+  }
+
+  // 2. Create the threaded section
+  std::cout << "Shank: Creating threaded section of length " << threadedLength
+            << std::endl;
+
+  // Build threaded section longer than needed, then trim
+  double buildLen = threadedLength + 4.0 * p;
+  TopoDS_Solid threadedPart =
+      BRepPrimAPI_MakeCylinder(0.5 * shankCap, buildLen).Solid();
+
+  // Apply thread profile
   double minorD = (params.thread.minorDiameter > 0)
                       ? params.thread.minorDiameter
                       : (d - 1.0825 * p);
-  thread = Thread(minorD, p, buildLength);
+  TopoDS_Solid threadCutter = Thread(minorD, p, buildLen);
+  threadedPart = Cut(threadedPart, threadCutter);
 
-  // Cut threads along the build length
-  shank = Cut(shank, thread);
+  // Trim to exact threaded length
+  gp_Trsf trimTrans;
+  trimTrans.SetTranslation(gp_Vec(0, 0, threadedLength));
+  TopoDS_Solid trimMask =
+      BRepPrimAPI_MakeCylinder(d * 2.0, buildLen + 10.0).Solid();
+  threadedPart =
+      Cut(threadedPart, BRepBuilderAPI_Transform(trimMask, trimTrans).Shape());
 
-  // 3. Grip Handling (Unthreaded part near the head)
-  if (ls > 0) {
-    // We want the grip area (from Z=0 to Z=ls) to be a clean cylinder
-    // First, clear any threads in the grip zone
-    // Use an oversized mask with axial overlap to avoid face-coincidence
-    double gOverlap = 1.0;
-    gp_Trsf gMaskTrans;
-    gMaskTrans.SetTranslation(gp_Vec(0, 0, -gOverlap));
-    TopoDS_Solid gMask =
-        BRepPrimAPI_MakeCylinder(d * 2.0, ls + gOverlap).Solid();
-    shank = Cut(shank, BRepBuilderAPI_Transform(gMask, gMaskTrans).Shape());
+  // 3. Position threaded section after grip
+  if (hasGrip) {
+    gp_Trsf threadOffset;
+    threadOffset.SetTranslation(gp_Vec(0, 0, ls));
+    threadedPart = TopoDS::Solid(
+        BRepBuilderAPI_Transform(threadedPart, threadOffset).Shape());
 
-    // Now add back the solid cylinder for the grip
-    // Also use slight axial overlap for the fuse operation
-    TopoDS_Solid gCyl = BRepPrimAPI_MakeCylinder(0.5 * shankCap, ls).Solid();
-    BRepAlgoAPI_Fuse fuse(shank, gCyl);
-    fuse.Build();
-    if (fuse.IsDone())
-      shank = TopoDS::Solid(fuse.Shape());
+    // Fuse grip and threaded sections
+    std::cout << "Shank: Fusing grip and threaded sections" << std::endl;
+    BRepAlgoAPI_Fuse fuseOp(gripPart, threadedPart);
+    fuseOp.Build();
+    if (!fuseOp.IsDone()) {
+      std::cerr << "Shank: Fuse failed, returning threaded part only"
+                << std::endl;
+      result = threadedPart;
+    } else {
+      // Extract single solid from fuse result
+      TopExp_Explorer ex(fuseOp.Shape(), TopAbs_SOLID);
+      if (ex.More()) {
+        result = TopoDS::Solid(ex.Current());
+      } else {
+        result = threadedPart;
+      }
+    }
+  } else {
+    result = threadedPart;
   }
 
-  // 4. Final Trimming to Length L
-  // We want the bolt to be from Z=0 to Z=L
-  // Clean up any "overhang" at the tip
-  // Ensure the tipMask fully covers the region to be removed
-  gp_Trsf tipTrans;
-  tipTrans.SetTranslation(gp_Vec(0, 0, L));
-  TopoDS_Solid tipMask =
-      BRepPrimAPI_MakeCylinder(d * 2.0, buildLength + 10.0).Solid();
-  shank = Cut(shank, BRepBuilderAPI_Transform(tipMask, tipTrans).Shape());
-
-  // 5. End Chamfer
+  // 4. End chamfer at the tip
   double cx[] = {0.5 * d - p, d};
   double cz[] = {L, L - 0.5 * d - p};
-  std::vector<gp_Pnt> points = {gp_Pnt(cx[0], 0.0, cz[0]),
-                                gp_Pnt(cx[1], 0.0, cz[0]),
-                                gp_Pnt(cx[1], 0.0, cz[1])};
-  shank = Cut(shank, Chamfer(points));
+  std::vector<gp_Pnt> chamferPts = {gp_Pnt(cx[0], 0.0, cz[0]),
+                                    gp_Pnt(cx[1], 0.0, cz[0]),
+                                    gp_Pnt(cx[1], 0.0, cz[1])};
+  result = Cut(result, Chamfer(chamferPts));
 
-  return shank;
+  std::cout << "Shank: Generation complete" << std::endl;
+  return result;
 }
 
 TopoDS_Solid Bolt::Head() {

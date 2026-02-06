@@ -2,6 +2,7 @@
 #include "export.h"
 #include "nut.h"
 #include "parameters.h"
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>

@@ -9,8 +9,11 @@
 #include <BRepGProp.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <GProp_GProps.hxx>
+#include <Standard_Boolean.hxx>
 #include <TopoDS.hxx>
+#include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
+#include <gp_Vec.hxx>
 #include <iostream>
 #include <stdexcept>
 

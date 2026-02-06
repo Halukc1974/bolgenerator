@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include "bolt.h"
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
@@ -14,6 +15,7 @@
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
+#include <gp_Vec.hxx>
 #include <stdexcept>
 #include <vector>
 

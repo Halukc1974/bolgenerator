@@ -45,7 +45,8 @@ struct NutParameters {
   double height;
   double washerFaceDiameter;
   double countersinkAngle;
-  double tolerance; // clearance between bolt and nut
+  double tolerance;        // clearance between bolt and nut
+  double edgeFilletRadius; // radius for smoothing nut edges
 };
 
 struct MaterialParameters {

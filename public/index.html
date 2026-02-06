@@ -380,8 +380,16 @@
                             <input type="number" name="nutTolerance" step="0.01" value="0.15">
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label title="Smooth nut edges like real parts (0.1-0.5mm recommended)">Nut Edge Fillet
+                                (mm)</label>
+                            <input type="number" name="nutEdgeFilletRadius" step="0.05" value="0.2" min="0" max="2">
+                        </div>
+                    </div>
                 </div>
             </div>
+
 
             <button type="submit" class="btn btn-primary" id="generateBtn">GENERATE 3D MODEL</button>
         </form>

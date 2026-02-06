@@ -6,11 +6,15 @@
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepGProp.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <GProp_GProps.hxx>
 #include <Standard_Boolean.hxx>
+#include <TopAbs_ShapeEnum.hxx>
+#include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
+#include <TopoDS_Edge.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
@@ -81,6 +85,27 @@ Nut::Nut(const BoltParameters &p) : params(p) {
     TopoDS_Solid hole =
         BRepPrimAPI_MakeCylinder(0.5 * d * scaleFactor, h).Solid();
     body = Cut(hexOuter, hole);
+  }
+
+  // 4. Apply edge fillet for smooth edges
+  if (params.nut.edgeFilletRadius > 0.01) {
+    try {
+      std::cout << "Nut: Applying edge fillet radius: "
+                << params.nut.edgeFilletRadius << std::endl;
+      BRepFilletAPI_MakeFillet fillet(body);
+      for (TopExp_Explorer ex(body, TopAbs_EDGE); ex.More(); ex.Next()) {
+        TopoDS_Edge edge = TopoDS::Edge(ex.Current());
+        fillet.Add(params.nut.edgeFilletRadius, edge);
+      }
+      fillet.Build();
+      if (fillet.IsDone()) {
+        body = TopoDS::Solid(fillet.Shape());
+        std::cout << "Nut: Edge fillet applied successfully" << std::endl;
+      }
+    } catch (...) {
+      std::cerr << "Nut: Edge fillet failed, continuing without fillet"
+                << std::endl;
+    }
   }
 }
 

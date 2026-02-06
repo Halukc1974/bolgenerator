@@ -8,12 +8,12 @@
 #include <vector>
 
 int main(int argc, char *argv[]) {
-  // New argument list (22 arguments + 1 for program name)
-  if (argc < 23) {
+  // New argument list (23 arguments + 1 for program name)
+  if (argc < 24) {
     std::cerr << "Usage: " << argv[0]
               << " <name> <headType> <s> <k> <dw> <c> <r> <socketS> <socketD> "
                  "<d> <L> <ls> <bodyTol> <threadD> <P> <minorD> <genNut> "
-                 "<nutS> <nutH> <nutDw> <nutTol> <edgeFillet>"
+                 "<nutS> <nutH> <nutDw> <nutTol> <boltFillet> <nutFillet>"
               << std::endl;
     return 1;
   }
@@ -53,6 +53,7 @@ int main(int argc, char *argv[]) {
 
     // Edge smoothing
     p.shank.edgeFilletRadius = atof(argv[i++]);
+    p.nut.edgeFilletRadius = atof(argv[i++]);
 
     std::cout << "Starting generation for " << name << "..." << std::endl;
 

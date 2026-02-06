@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 
 app.post('/generate', (req, res) => {
     const p = req.body;
-    
+
     // Debug: Log received parameters
     console.log('Received parameters for generation:', p);
 
@@ -52,11 +52,10 @@ app.post('/generate', (req, res) => {
 
     exec(command, (error, stdout, stderr) => {
         if (error) {
-            console.error(`Error: ${error.message}`);
-            console.error(`stderr: ${stderr}`);
-            return res.status(500).json({ 
-                error: 'Failed to generate bolt. Check parameters.',
-                details: stderr 
+            console.error(`Generation error: ${error.message}`);
+            return res.status(500).json({
+                success: false,
+                error: "Geometry generation failed. Check parameters (especially pitch vs diameter)."
             });
         }
 

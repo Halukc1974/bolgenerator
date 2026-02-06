@@ -150,17 +150,15 @@ TopoDS_Solid Bolt::Shank() {
   TopoDS_Solid tipMask = BRepPrimAPI_MakeCylinder(d * 2.0, buildLength).Solid();
   shank = Cut(shank, BRepBuilderAPI_Transform(tipMask, tipTrans).Shape());
 
+  // 5. End Chamfer
+  double cx[] = {0.5 * d - p, d};
+  double cz[] = {L, L - 0.5 * d - p};
+  std::vector<gp_Pnt> points = {gp_Pnt(cx[0], 0.0, cz[0]),
+                                gp_Pnt(cx[1], 0.0, cz[0]),
+                                gp_Pnt(cx[1], 0.0, cz[1])};
+  shank = Cut(shank, Chamfer(points));
+
   return shank;
-}
-
-// End Chamfer
-double x[] = {0.5 * d - p, d};
-double z[] = {L, L - 0.5 * d - p};
-std::vector<gp_Pnt> points = {gp_Pnt(x[0], 0.0, z[0]), gp_Pnt(x[1], 0.0, z[0]),
-                              gp_Pnt(x[1], 0.0, z[1])};
-shank = Cut(shank, Chamfer(points));
-
-return shank;
 }
 
 TopoDS_Solid Bolt::Head() {

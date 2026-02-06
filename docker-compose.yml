@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: bolgenerator
     ports:
       - "3000:3000"
     volumes:

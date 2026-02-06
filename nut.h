@@ -8,19 +8,16 @@
 
 #include <TopoDS_Solid.hxx>
 
-class Nut
-{
-    public:
-        Nut(double boltMajorD, double pitch, double nutHeight, double acrossFlats, double tolerance);
-        TopoDS_Solid Solid();
-    
-    private:
-        double boltMajorD;    // Bolt major diameter
-        double pitch;         // Thread pitch
-        double nutHeight;     // Nut thickness
-        double acrossFlats;   // Hex across flats
-        double tolerance;     // Thread tolerance clearance
-        TopoDS_Solid body;
+#include "parameters.h"
+
+class Nut {
+public:
+  Nut(const BoltParameters &);
+  TopoDS_Solid Solid();
+
+private:
+  BoltParameters params;
+  TopoDS_Solid body;
 };
 
 #endif // NUT_H

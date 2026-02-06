@@ -23,26 +23,26 @@
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
-#include <gp_Trsf.hxx>
 #include <TopoDS_Solid.hxx>
+#include <gp_Trsf.hxx>
 
 #include "chamfer.h"
 #include "cut.h"
 #include "hexagon.h"
 #include "thread.h"
 
-class Bolt
-{
-    public:
-        Bolt(double, double, double, double, double, double, double, int);
-        TopoDS_Solid Solid();
-    
-    private:
-        double majord, length, pitch, headD1, headD2, headD3, headD4;
-        int headType;
-        TopoDS_Solid Shank();
-        TopoDS_Solid Head();
-        TopoDS_Solid body;
+#include "parameters.h"
+
+class Bolt {
+public:
+  Bolt(const BoltParameters &);
+  TopoDS_Solid Solid();
+
+private:
+  BoltParameters params;
+  TopoDS_Solid Shank();
+  TopoDS_Solid Head();
+  TopoDS_Solid body;
 };
 
 #endif // BOLT_H

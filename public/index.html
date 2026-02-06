@@ -1,346 +1,424 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BoltGenerator - Web Interface</title>
+    <title>BoltGenerator v2 - Engineering Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
     <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #10b981;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
-            height: calc(100vh - 40px);
-        }
-        .container {
-            display: flex;
-            width: 100%;
-            gap: 20px;
-        }
-        .left-panel {
-            flex: 1;
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 400px;
-        }
-        .right-panel {
-            flex: 1;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-        }
-        h1 {
-            color: #333;
-            margin-top: 0;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group small {
-            display: block;
-            margin-top: 4px;
-            color: #666;
-            font-size: 0.85em;
-            font-style: italic;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input[type="number"], select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 4px;
-            display: none;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .viewer-container {
-            flex: 1;
-            position: relative;
-            border-radius: 8px;
+            height: 100vh;
             overflow: hidden;
         }
-        #viewer {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 380px;
+            background-color: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.02);
+            z-index: 10;
         }
-        .controls {
-            padding: 10px 15px;
-            background-color: #f8f8f8;
-            border-bottom: 1px solid #ddd;
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h1 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Section Styling */
+        .section {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-header {
+            padding: 16px 24px;
+            background: #fff;
+            cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            user-select: none;
         }
-        .controls h3 {
-            margin: 0;
-            font-size: 16px;
-            color: #333;
+
+        .section-header:hover {
+            background-color: #f1f5f9;
         }
-        .control-group {
+
+        .section-content {
+            padding: 0 24px 20px 24px;
+            display: block;
+            /* Can be toggled */
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-row {
             display: flex;
-            gap: 5px;
+            gap: 12px;
+        }
+
+        .form-row>.form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            border-color: var(--primary);
+        }
+
+        /* Main Viewport */
+        .viewport {
+            flex: 1;
+            position: relative;
+            background-color: #000;
+        }
+
+        #viewer {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Overlay Controls */
+        .overlay {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-bar {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            width: calc(100% - 48px);
+            margin: 20px 24px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
             align-items: center;
+            justify-content: center;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
         }
-        .control-btn {
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: background-color 0.2s;
+
+        .btn-icon:hover {
+            background: #f1f5f9;
         }
-        .control-btn:hover {
-            background-color: #0b7dda;
+
+        /* Status & Results */
+        .status-pill {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            display: none;
         }
-        .control-btn.secondary {
-            background-color: #757575;
+
+        .download-group {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
         }
-        .control-btn.secondary:hover {
-            background-color: #616161;
-        }
-        .download-section {
-            padding: 15px;
-            background-color: #f8f8f8;
-            border-top: 1px solid #ddd;
-        }
-        .download-btn {
-            background-color: #FF9800;
-            color: white;
-            padding: 10px 15px;
+
+        .dl-link {
+            font-size: 0.75rem;
+            color: var(--primary);
             text-decoration: none;
+            font-weight: 600;
+            padding: 4px 8px;
+            border: 1px solid var(--primary);
             border-radius: 4px;
-            display: inline-block;
-            font-size: 14px;
-            transition: background-color 0.2s;
-            border: none;
-            cursor: pointer;
         }
-        .download-btn:hover {
-            background-color: #e68900;
+
+        .dl-link:hover {
+            background: var(--primary);
+            color: white;
         }
-        .download-btn.stl {
-            background-color: #4CAF50;
+
+        .hidden {
+            display: none !important;
         }
-        .download-btn.stl:hover {
-            background-color: #45a049;
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border);
+            margin: 0;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="left-panel">
-            <h1>BoltGenerator</h1>
-            <p>Generate 3D bolt models. Enter dimensions in millimeters.</p>
-
-            <form id="boltForm">
-                <div class="form-group">
-                    <label for="headType">Head Type:</label>
-                    <select id="headType" name="headType" required>
-                        <option value="0">Hex Head</option>
-                        <option value="1">Socket Head</option>
-                        <option value="2">Flat Head</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="majord">Major Diameter (mm):</label>
-                    <input type="number" id="majord" name="majord" step="0.01" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="length">Length (mm):</label>
-                    <input type="number" id="length" name="length" step="0.01" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="pitch">Thread Pitch (mm):</label>
-                    <input type="number" id="pitch" name="pitch" step="0.01" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="headD1" id="headD1Label">Hex Across Flats (mm):</label>
-                    <input type="number" id="headD1" name="headD1" step="0.01" required>
-                    <small id="headD1Help">Distance between parallel sides of hex</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="headD2">Head Height (mm):</label>
-                    <input type="number" id="headD2" name="headD2" step="0.01" required>
-                </div>
-
-                <div class="form-group" id="headD3Group">
-                    <label for="headD3" id="headD3Label">Socket Size (mm):</label>
-                    <input type="number" id="headD3" name="headD3" step="0.01" value="0">
-                    <small id="headD3Help">Hex socket across flats (only for socket head)</small>
-                </div>
-
-                <div class="form-group" id="headD4Group">
-                    <label for="headD4" id="headD4Label">Socket Depth (mm):</label>
-                    <input type="number" id="headD4" name="headD4" step="0.01" value="0">
-                    <small id="headD4Help">How deep the hex socket goes into the head</small>
-                </div>
-
-                <hr style="margin: 20px 0; border: 1px solid #ddd;">
-                
-                <h3 style="margin: 20px 0 15px 0;">Nut Generation (Optional)</h3>
-                
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" id="generateNut" name="generateNut" value="1">
-                        Generate Matching Nut
-                    </label>
-                </div>
-
-                <div id="nutParameters" style="opacity: 0.5; pointer-events: none;">
-                    <div class="form-group">
-                        <label for="nutHeight">Nut Height (mm):</label>
-                        <input type="number" id="nutHeight" name="nutHeight" step="0.01" value="5">
-                        <small>Typical: M6=5mm, M10=8mm, M16=13mm, M20=16mm</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nutAcrossFlats">Nut Across Flats (mm):</label>
-                        <input type="number" id="nutAcrossFlats" name="nutAcrossFlats" step="0.01" value="10">
-                        <small>Hex size - should be larger than bolt diameter</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="tolerance">Tolerance (mm):</label>
-                        <input type="number" id="tolerance" name="tolerance" step="0.01" value="0.15">
-                        <small style="font-weight: bold;">Recommended: M6→0.1, M10→0.15, M16→0.2, M20→0.25</small>
-                    </div>
-                </div>
-
-                <button type="submit">Generate Bolt</button>
-            </form>
-
-            <div id="result" class="result"></div>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>⚙️ BoltGenerator <small style="font-size: 0.6em; color: var(--text-muted);">v2.0 Professional</small>
+            </h1>
         </div>
 
-        <div class="right-panel">
-            <div class="controls">
-                <h3>3D Preview</h3>
-                <div style="display: flex; gap: 15px;">
-                    <div class="control-group">
-                        <button class="control-btn" onclick="resetCamera()" title="Reset View">⟲</button>
-                        <button class="control-btn" onclick="setTopView()" title="Top View">⊤</button>
-                        <button class="control-btn" onclick="setFrontView()" title="Front View">▢</button>
-                        <button class="control-btn" onclick="setIsoView()" title="Isometric">⧉</button>
+        <form id="boltForm">
+            <!-- 1. Head Section -->
+            <div class="section">
+                <div class="section-header">1. Head Geometry <span>▼</span></div>
+                <div class="section-content">
+                    <div class="form-group">
+                        <label>Head Type</label>
+                        <select name="headType" id="headType">
+                            <option value="0">Hex Head (Altı Köşe)</option>
+                            <option value="1">Socket Cap (Alyan)</option>
+                            <option value="2">Flat Head (Düz)</option>
+                            <option value="3">Countersunk (Havşa)</option>
+                        </select>
                     </div>
-                    <div class="control-group">
-                        <button class="control-btn secondary" onclick="toggleWireframe()" title="Toggle Wireframe">◰</button>
-                        <button class="control-btn secondary" onclick="toggleAxes()" title="Toggle Axes">⊕</button>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label id="aFlatsLabel">Across Flats (s)</label>
+                            <input type="number" name="widthAcrossFlats" step="0.1" value="18">
+                        </div>
+                        <div class="form-group">
+                            <label>Height (k)</label>
+                            <input type="number" name="headHeight" step="0.1" value="8">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Washer Face ⌀ (dw)</label>
+                            <input type="number" name="washerFaceDiameter" step="0.1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>WF Thickness (c)</label>
+                            <input type="number" name="washerFaceThickness" step="0.1" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Underhead Fillet (r)</label>
+                        <input type="number" name="underheadFilletRadius" step="0.1" value="0.5">
+                    </div>
+                    <div id="socketFields" class="form-row hidden">
+                        <div class="form-group">
+                            <label>Socket Size</label>
+                            <input type="number" name="socketSize" step="0.1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Socket Depth</label>
+                            <input type="number" name="socketDepth" step="0.1" value="0">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="viewer-container">
-                <div id="viewer"></div>
+            <!-- 2. Shank Section -->
+            <div class="section">
+                <div class="section-header">2. Shank & Body <span>▼</span></div>
+                <div class="section-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nominal ⌀ (d)</label>
+                            <input type="number" name="nominalDiameter" step="0.1" value="12">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Length (L)</label>
+                            <input type="number" name="totalLength" step="1" value="50">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Grip Length (ls)</label>
+                            <input type="number" name="gripLength" step="1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Body Tolerance</label>
+                            <input type="number" name="bodyTolerance" step="0.01" value="0">
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div id="downloadSection" class="download-section" style="display: none;">
-                <div style="margin-bottom: 10px;">
-                    <strong>Bolt Files:</strong>
-                    <div style="display: flex; gap: 10px; margin-top: 5px;">
-                        <a id="downloadBrepLink" href="#" download="bolt.brep" class="download-btn">⬇ BREP</a>
-                        <a id="downloadStlLink" href="#" download="bolt.stl" class="download-btn stl">⬇ STL</a>
+            <!-- 3. Thread Section -->
+            <div class="section">
+                <div class="section-header">3. Thread Profile <span>▼</span></div>
+                <div class="section-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Major ⌀ (d1)</label>
+                            <input type="number" name="majorDiameter" step="0.1" value="12">
+                        </div>
+                        <div class="form-group">
+                            <label>Pitch (P)</label>
+                            <input type="number" name="threadPitch" step="0.01" value="1.75">
+                        </div>
                     </div>
-                </div>
-                <div id="nutDownloadSection" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
-                    <strong>Nut Files:</strong>
-                    <div style="display: flex; gap: 10px; margin-top: 5px;">
-                        <a id="downloadNutBrepLink" href="#" download="bolt_nut.brep" class="download-btn">⬇ BREP</a>
-                        <a id="downloadNutStlLink" href="#" download="bolt_nut.stl" class="download-btn stl">⬇ STL</a>
+                    <div class="form-group">
+                        <label>Minor Diameter (d3)</label>
+                        <input type="number" name="minorDiameter" step="0.1" value="0">
+                        <small style="font-size: 0.7rem; color: var(--text-muted);">0 = Auto calculated</small>
                     </div>
                 </div>
             </div>
+
+            <!-- 4. Nut Section -->
+            <div class="section">
+                <div class="section-header">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="generateNut" id="genNutCheckbox"> 4. Matching Nut
+                    </label>
+                    <span>▼</span>
+                </div>
+                <div id="nutContent" class="section-content" style="opacity: 0.5; pointer-events: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Across Flats</label>
+                            <input type="number" name="nutAcrossFlats" step="0.1" value="18">
+                        </div>
+                        <div class="form-group">
+                            <label>Height (m)</label>
+                            <input type="number" name="nutHeight" step="0.1" value="10">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Washer Face ⌀</label>
+                            <input type="number" name="nutWasherFace" step="0.1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Thread Tolerance</label>
+                            <input type="number" name="nutTolerance" step="0.01" value="0.15">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="generateBtn">GENERATE 3D MODEL</button>
+        </form>
+    </div>
+
+    <div class="viewport">
+        <div id="viewer"></div>
+
+        <div class="action-bar">
+            <button class="btn-icon" onclick="resetCamera()" title="Reset View">⟲</button>
+            <button class="btn-icon" onclick="setTopView()" title="Top View">⊤</button>
+            <button class="btn-icon" onclick="setFrontView()" title="Front View">▢</button>
+            <button class="btn-icon" onclick="toggleWireframe()" title="Wireframe">◰</button>
+        </div>
+
+        <div id="statusPill" class="status-pill">
+            <div id="statusMsg" style="font-weight: 600; font-size: 0.9rem;">Ready</div>
+            <div id="downloadLinks" class="download-group"></div>
         </div>
     </div>
 
     <script>
-        let scene, camera, renderer, controls, boltModel, nutModel, axesHelper;
+        let scene, camera, renderer, controls, boltModel, nutModel;
         let isWireframe = false;
-        let boltLength = 30; // Will be updated when bolt is generated
-        let headHeight = 6.5; // Will be updated when bolt is generated
 
-        function init3DViewer() {
-            // Scene
+        function init3D() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf0f0f0);
-
-            // Camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / 2 / window.innerHeight, 0.1, 1000);
-            camera.position.set(50, 50, 50);
-
-            // Renderer
+            scene.background = new THREE.Color(0x0f172a);
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.set(60, 60, 60);
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(document.querySelector('.viewer-container').clientWidth,
-                           document.querySelector('.viewer-container').clientHeight);
+            renderer.setSize(document.querySelector('.viewport').clientWidth, window.innerHeight);
             document.getElementById('viewer').appendChild(renderer.domElement);
-
-            // Controls
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-            scene.add(ambientLight);
-
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
-
-            // Axes helper
-            axesHelper = new THREE.AxesHelper(20);
-            scene.add(axesHelper);
-
-            // Grid
-            const gridHelper = new THREE.GridHelper(100, 10);
-            scene.add(gridHelper);
-
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            const sun = new THREE.DirectionalLight(0xffffff, 0.6);
+            sun.position.set(1, 1, 1);
+            scene.add(sun);
+            scene.add(new THREE.GridHelper(200, 20, 0x1e293b, 0x0f172a));
             animate();
         }
 
@@ -350,438 +428,110 @@
             renderer.render(scene, camera);
         }
 
-        function resetCamera() {
-            camera.position.set(50, 50, 50);
-            camera.lookAt(0, 0, 0);
-            controls.reset();
-        }
-
-        function fitToView() {
-            // Create bounding box for all models
-            const box = new THREE.Box3();
-            if (boltModel) {
-                box.setFromObject(boltModel);
-            }
-            if (nutModel) {
-                box.expandByObject(nutModel);
-            }
-            
-            if (!box.isEmpty()) {
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const fov = camera.fov * (Math.PI / 180);
-                let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-
-                cameraZ *= 2.2; // Add some padding
-
-                camera.position.set(center.x + cameraZ * 0.5, center.y + cameraZ * 0.5, center.z + cameraZ * 0.7);
-                camera.lookAt(center);
-
-                controls.target.copy(center);
-                controls.update();
-            }
-        }
-
-        function setTopView() {
-            const box = new THREE.Box3();
-            if (boltModel) {
-                box.setFromObject(boltModel);
-            }
-            if (nutModel) {
-                box.expandByObject(nutModel);
-            }
-            
-            if (!box.isEmpty()) {
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                
-                camera.position.set(center.x, center.y, center.z + maxDim * 2);
-                camera.lookAt(center);
-                controls.target.copy(center);
-                controls.update();
-            }
-        }
-
-        function setFrontView() {
-            const box = new THREE.Box3();
-            if (boltModel) {
-                box.setFromObject(boltModel);
-            }
-            if (nutModel) {
-                box.expandByObject(nutModel);
-            }
-            
-            if (!box.isEmpty()) {
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                
-                camera.position.set(center.x, center.y, center.z + maxDim * 2);
-                camera.lookAt(center);
-                controls.target.copy(center);
-                controls.update();
-            }
-        }
-
-        function setSideView() {
-            const box = new THREE.Box3();
-            if (boltModel) {
-                box.setFromObject(boltModel);
-            }
-            if (nutModel) {
-                box.expandByObject(nutModel);
-            }
-            
-            if (!box.isEmpty()) {
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                
-                camera.position.set(center.x + maxDim * 2, center.y, center.z);
-                camera.lookAt(center);
-                controls.target.copy(center);
-                controls.update();
-            }
-        }
-
-        function setIsoView() {
-            const box = new THREE.Box3();
-            if (boltModel) {
-                box.setFromObject(boltModel);
-            }
-            if (nutModel) {
-                box.expandByObject(nutModel);
-            }
-            
-            if (!box.isEmpty()) {
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                
-                const dist = maxDim * 1.8;
-                camera.position.set(center.x + dist, center.y + dist, center.z + dist);
-                camera.lookAt(center);
-                controls.target.copy(center);
-                controls.update();
-            }
-        }
-
+        function resetCamera() { camera.position.set(60, 60, 60); controls.target.set(0, 0, 0); }
+        function setTopView() { camera.position.set(0, 150, 0); camera.lookAt(0, 0, 0); }
+        function setFrontView() { camera.position.set(0, 0, 150); camera.lookAt(0, 0, 0); }
         function toggleWireframe() {
             isWireframe = !isWireframe;
-            if (boltModel) {
-                boltModel.traverse(function(child) {
-                    if (child.isMesh) {
-                        child.material.wireframe = isWireframe;
-                    }
-                });
-            }
-            if (nutModel) {
-                nutModel.traverse(function(child) {
-                    if (child.isMesh) {
-                        child.material.wireframe = isWireframe;
-                    }
-                });
-            }
+            scene.traverse(child => { if (child.isMesh) child.material.wireframe = isWireframe; });
         }
 
-        function toggleAxes() {
-            if (axesHelper.parent) {
-                scene.remove(axesHelper);
-            } else {
-                scene.add(axesHelper);
-            }
-        }
-
-        function loadSTLModel(stlUrl, nutStlUrl) {
+        function loadSTL(url, isNut = false) {
             const loader = new THREE.STLLoader();
-            
-            // Load bolt
-            loader.load(stlUrl, function(geometry) {
-                // Remove previous bolt model
-                if (boltModel) {
-                    scene.remove(boltModel);
-                }
-
-                // Create material
+            loader.load(url, geometry => {
+                if (isNut && nutModel) scene.remove(nutModel);
+                if (!isNut && boltModel) scene.remove(boltModel);
                 const material = new THREE.MeshPhongMaterial({
-                    color: 0x808080,
-                    specular: 0x111111,
-                    shininess: 200,
-                    wireframe: isWireframe
+                    color: isNut ? 0x94a3b8 : 0x3b82f6,
+                    specular: 0x111111, shininess: 100, wireframe: isWireframe
                 });
-
-                // Create mesh
-                boltModel = new THREE.Mesh(geometry, material);
-
-                // Center the model
+                const mesh = new THREE.Mesh(geometry, material);
                 geometry.computeBoundingBox();
                 const center = geometry.boundingBox.getCenter(new THREE.Vector3());
-                boltModel.position.sub(center);
+                mesh.position.sub(center);
+                if (isNut) mesh.position.y += 30;
+                if (isNut) nutModel = mesh; else boltModel = mesh;
+                scene.add(mesh);
 
-                scene.add(boltModel);
-                
-                console.log('Bolt loaded successfully');
-                
-                // Load nut if provided
-                if (nutStlUrl) {
-                    loadNutModel(nutStlUrl);
-                } else {
-                    // Remove previous nut if any
-                    if (nutModel) {
-                        scene.remove(nutModel);
-                        nutModel = null;
-                    }
-                    // Fit to view after loading
-                    setTimeout(() => fitToView(), 100);
-                }
-            }, function(progress) {
-                console.log('Loading bolt STL: ', (progress.loaded / progress.total * 100) + '%');
-            }, function(error) {
-                console.error('Error loading bolt STL:', error);
-            });
-        }
-        
-        function loadNutModel(nutStlUrl) {
-            console.log('loadNutModel called with URL:', nutStlUrl);
-            const loader = new THREE.STLLoader();
-            loader.load(nutStlUrl, function(geometry) {
-                console.log('Nut STL loaded, geometry:', geometry);
-                // Remove previous nut model
-                if (nutModel) {
-                    scene.remove(nutModel);
-                }
-
-                // Create material (slightly different color for nut)
-                const material = new THREE.MeshPhongMaterial({
-                    color: 0xA0A0A0,
-                    specular: 0x111111,
-                    shininess: 200,
-                    wireframe: isWireframe
-                });
-
-                // Create mesh
-                nutModel = new THREE.Mesh(geometry, material);
-
-                // Center nut horizontally and place it relative to the bolt geometry
-                geometry.computeBoundingBox();
-                const nutCenter = geometry.boundingBox.getCenter(new THREE.Vector3());
-                const nutHeightMesh = geometry.boundingBox.max.z - geometry.boundingBox.min.z;
-
-                console.log('Nut bounding box:', geometry.boundingBox);
-                console.log('Nut center:', nutCenter);
-                console.log('Nut height:', nutHeightMesh);
-
-                // Compute bolt bounding box (if available) so we can position nut relative to the actual bolt geometry
-                let boltBox = null;
-                try {
-                    if (boltModel) {
-                        boltBox = new THREE.Box3().setFromObject(boltModel);
-                        console.log('Bolt bounding box for positioning:', boltBox);
-                    }
-                } catch (err) {
-                    console.warn('Could not compute bolt bounding box for nut positioning:', err);
-                }
-
-                // Determine target center Z for the nut. If bolt bbox available, place nut just above the bolt's min.z (near the head).
-                let targetCenterZ = 0;
-                if (boltBox && !boltBox.isEmpty()) {
-                    // small epsilon so nut doesn't intersect the head geometry visually
-                    const desiredBottomZ = boltBox.min.z + 0.2;
-                    targetCenterZ = desiredBottomZ + nutHeightMesh * 0.5;
-                } else {
-                    // fallback: use previous heuristic if bolt geometry not present
-                    const nutZPosition = -(headHeight + (boltLength / 2));
-                    targetCenterZ = nutZPosition;
-                }
-
-                // Position nut so its center aligns horizontally and vertically at targetCenterZ
-                nutModel.position.set(
-                    -nutCenter.x,
-                    -nutCenter.y,
-                    targetCenterZ - nutCenter.z
-                );
-
-                console.log('Nut target center Z:', targetCenterZ);
-                console.log('Nut positioned at:', nutModel.position);
-
-                scene.add(nutModel);
-                console.log('Nut added to scene. Scene children:', scene.children.length);
-                
-                // Fit to view after loading both
-                setTimeout(() => fitToView(), 100);
-            }, function(progress) {
-                console.log('Loading nut STL: ', (progress.loaded / progress.total * 100) + '%');
-            }, function(error) {
-                console.error('Error loading nut STL:', error);
+                // Auto-fit view
+                const box = new THREE.Box3().setFromObject(mesh);
+                const size = box.getSize(new THREE.Vector3()).length();
+                camera.position.set(size, size, size);
+                controls.target.set(0, 0, 0);
             });
         }
 
-        // Initialize 3D viewer
-        init3DViewer();
-
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            camera.aspect = document.querySelector('.viewer-container').clientWidth /
-                          document.querySelector('.viewer-container').clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(document.querySelector('.viewer-container').clientWidth,
-                           document.querySelector('.viewer-container').clientHeight);
-        });
-
-        // Update form labels based on head type
-        function updateHeadLabels() {
-            const headType = document.getElementById('headType').value;
-            const headD1Label = document.getElementById('headD1Label');
-            const headD1Help = document.getElementById('headD1Help');
-            const headD3Group = document.getElementById('headD3Group');
-            const headD4Group = document.getElementById('headD4Group');
-            const headD3Label = document.getElementById('headD3Label');
-            const headD3Help = document.getElementById('headD3Help');
-            const headD3Input = document.getElementById('headD3');
-            const headD4Input = document.getElementById('headD4');
-
-            if (headType === '0') { // Hex Head
-                headD1Label.textContent = 'Hex Across Flats (mm):';
-                headD1Help.textContent = 'Distance between parallel sides of hex';
-                headD3Group.style.display = 'none';
-                headD4Group.style.display = 'none';
-                headD3Input.removeAttribute('required');
-                headD4Input.removeAttribute('required');
-                headD3Input.value = '0';
-                headD4Input.value = '0';
-            } else if (headType === '1') { // Socket Head
-                headD1Label.textContent = 'Head Diameter (mm):';
-                headD1Help.textContent = 'Outer diameter of cylindrical head';
-                headD3Group.style.display = 'block';
-                headD4Group.style.display = 'block';
-                headD3Label.textContent = 'Socket Size (mm):';
-                headD3Help.textContent = 'Hex socket across flats';
-                headD3Input.setAttribute('required', 'required');
-                headD4Input.setAttribute('required', 'required');
-            } else if (headType === '2') { // Flat Head
-                headD1Label.textContent = 'Head Diameter (mm):';
-                headD1Help.textContent = 'Diameter of flat head';
-                headD3Group.style.display = 'none';
-                headD4Group.style.display = 'none';
-                headD3Input.removeAttribute('required');
-                headD4Input.removeAttribute('required');
-                headD3Input.value = '0';
-                headD4Input.value = '0';
+        document.getElementById('headType').addEventListener('change', e => {
+            const socketFields = document.getElementById('socketFields');
+            const aFlatsLabel = document.getElementById('aFlatsLabel');
+            if (e.target.value == '1') {
+                socketFields.classList.remove('hidden');
+                aFlatsLabel.textContent = "Head Diameter (D)";
+            } else {
+                socketFields.classList.add('hidden');
+                aFlatsLabel.textContent = "Across Flats (s)";
             }
-        }
-
-        // Initialize labels and listen for changes
-        document.addEventListener('DOMContentLoaded', () => {
-            updateHeadLabels();
-            document.getElementById('headType').addEventListener('change', updateHeadLabels);
-            
-            // Handle nut checkbox
-            const generateNutCheckbox = document.getElementById('generateNut');
-            const nutParameters = document.getElementById('nutParameters');
-            
-            generateNutCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    nutParameters.style.opacity = '1';
-                    nutParameters.style.pointerEvents = 'auto';
-                } else {
-                    nutParameters.style.opacity = '0.5';
-                    nutParameters.style.pointerEvents = 'none';
-                }
-            });
         });
 
-        document.getElementById('boltForm').addEventListener('submit', async (e) => {
+        document.getElementById('genNutCheckbox').addEventListener('change', e => {
+            const content = document.getElementById('nutContent');
+            content.style.opacity = e.target.checked ? '1' : '0.5';
+            content.style.pointerEvents = e.target.checked ? 'auto' : 'none';
+        });
+
+        document.getElementById('boltForm').addEventListener('submit', async e => {
             e.preventDefault();
+            const btn = document.getElementById('generateBtn');
+            const statusPill = document.getElementById('statusPill');
+            const statusMsg = document.getElementById('statusMsg');
+            const dlLinks = document.getElementById('downloadLinks');
+
+            btn.disabled = true;
+            btn.textContent = "GENERATING...";
+            statusPill.style.display = 'block';
+            statusMsg.textContent = "Processing engineering geometry...";
+            dlLinks.innerHTML = "";
 
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
-            
-            // Handle checkbox - if not checked, formData won't include it
-            if (!data.generateNut) {
-                data.generateNut = '0';
-            }
-            
-            console.log('Submitting form data:', data);
-
-            const resultDiv = document.getElementById('result');
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'result';
-            resultDiv.textContent = data.generateNut === '1' ? 'Generating bolt and nut...' : 'Generating bolt...';
+            data.generateNut = document.getElementById('genNutCheckbox').checked;
 
             try {
-                const response = await fetch('/generate', {
+                const res = await fetch('/generate', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
                 });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('Server response:', result);
-                    
-                    if (result.success) {
-                        // Update bolt download links
-                        const downloadBrepLink = document.getElementById('downloadBrepLink');
-                        const downloadStlLink = document.getElementById('downloadStlLink');
-                        
-                        downloadBrepLink.href = result.downloadUrl;
-                        downloadBrepLink.download = `${result.filename}.brep`;
-                        
-                        downloadStlLink.href = result.previewUrl;
-                        downloadStlLink.download = `${result.filename}.stl`;
-
-                        // Show download section
-                        document.getElementById('downloadSection').style.display = 'block';
-                        
-                        // Handle nut files if generated
-                        if (result.nutGenerated) {
-                            const nutDownloadSection = document.getElementById('nutDownloadSection');
-                            const downloadNutBrepLink = document.getElementById('downloadNutBrepLink');
-                            const downloadNutStlLink = document.getElementById('downloadNutStlLink');
-                            
-                            downloadNutBrepLink.href = result.nutDownloadUrl;
-                            downloadNutBrepLink.download = `${result.filename}_nut.brep`;
-                            
-                            downloadNutStlLink.href = result.nutPreviewUrl;
-                            downloadNutStlLink.download = `${result.filename}_nut.stl`;
-                            
-                            nutDownloadSection.style.display = 'block';
-                            
-                            resultDiv.className = 'result success';
-                            resultDiv.textContent = 'Bolt and nut generated successfully! Loading 3D preview...';
-                        } else {
-                            document.getElementById('nutDownloadSection').style.display = 'none';
-                            resultDiv.className = 'result success';
-                            resultDiv.textContent = 'Bolt generated successfully! Loading 3D preview...';
-                        }
-
-                        // Store bolt dimensions for nut positioning
-                        boltLength = parseFloat(data.length) || 30;
-                        headHeight = parseFloat(data.headD2) || 6.5;
-                        
-                        // Load STL for 3D preview (and nut if generated)
-                        const nutUrl = result.nutGenerated ? result.nutPreviewUrl : null;
-                        loadSTLModel(result.previewUrl, nutUrl);
-                    } else {
-                        resultDiv.className = 'result error';
-                        resultDiv.textContent = `Error: ${result.error || 'Unknown error'}`;
+                const result = await res.json();
+                if (result.success) {
+                    statusMsg.textContent = "Generation Complete!";
+                    dlLinks.innerHTML = `
+                        <a href="${result.boltBrep}" class="dl-link">Bolt BREP</a>
+                        <a href="${result.boltStl}" class="dl-link">Bolt STL</a>
+                    `;
+                    if (result.nutBrep) {
+                        dlLinks.innerHTML += `<a href="${result.nutBrep}" class="dl-link">Nut BREP</a><a href="${result.nutStl}" class="dl-link">Nut STL</a>`;
                     }
+                    loadSTL(result.boltStl);
+                    if (result.nutStl) loadSTL(result.nutStl, true);
                 } else {
-                    const error = await response.json();
-                    resultDiv.className = 'result error';
-                    resultDiv.textContent = `Error: ${error.error}`;
+                    statusMsg.textContent = "Error: " + result.error;
                 }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                resultDiv.className = 'result error';
-                resultDiv.textContent = `Error: ${error.message}`;
+            } catch (err) {
+                statusMsg.textContent = "Request Failed";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "GENERATE 3D MODEL";
             }
+        });
+
+        init3D();
+        window.addEventListener('resize', () => {
+            renderer.setSize(document.querySelector('.viewport').clientWidth, window.innerHeight);
+            camera.aspect = document.querySelector('.viewport').clientWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
         });
     </script>
 </body>
+
 </html>

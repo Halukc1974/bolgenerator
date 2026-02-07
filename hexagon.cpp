@@ -44,7 +44,7 @@ TopoDS_Solid Hexagon(double aflats, double height)
     polygon.Close();
 
     TopoDS_Wire wire = polygon.Wire();
-    TopoDS_Face face = BRepBuilderAPI_MakeFace(wire);
+    TopoDS_Face face = BRepBuilderAPI_MakeFace(wire).Face();
     TopoDS_Shape prism = BRepPrimAPI_MakePrism(face, gp_Vec(0.0, 0.0, height)).Shape();
 
     return TopoDS::Solid(prism);

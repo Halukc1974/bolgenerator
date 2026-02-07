@@ -1,5 +1,4 @@
 #include "nut.h"
-#include "bolt.h"
 #include "cut.h"
 #include "hexagon.h"
 #include "thread.h"
@@ -27,72 +26,109 @@ Nut::Nut(const BoltParameters &p) : params(p) {
   double h = params.nut.height;
   double s = params.nut.widthAcrossFlats;
   double tol = params.nut.tolerance;
+  double threadClearance = params.nut.threadClearance;
 
   if (d <= 0 || p_pitch <= 0 || h <= 0 || s <= 0) {
     throw std::runtime_error("Nut: All dimensions must be positive");
   }
+
+  std::cout << "Nut: Creating with d=" << d << " pitch=" << p_pitch
+            << " height=" << h << " width=" << s << std::endl;
 
   // 1. Create hex outer shape
   TopoDS_Solid hexOuter = Hexagon(s, h);
 
   // Add Washer Face if specified
   if (params.nut.washerFaceDiameter > 0) {
-    // Assume standard washer face thickness of 10% of nut height or 0.5mm
     double wft = 0.5;
     TopoDS_Solid washer =
-        BRepPrimAPI_MakeCylinder(0.5 * params.nut.washerFaceDiameter, wft).Solid();
+        BRepPrimAPI_MakeCylinder(0.5 * params.nut.washerFaceDiameter, wft)
+            .Solid();
     BRepAlgoAPI_Fuse washerFuse(hexOuter, washer);
     washerFuse.Build();
-    hexOuter = TopoDS::Solid(washerFuse.Shape());
+    if (washerFuse.IsDone()) {
+      hexOuter = TopoDS::Solid(washerFuse.Shape());
+    }
   }
 
-  // 2. Create cutter bolt
-  // We use a simplified bolt as a cutter.
-  // It MUST be significantly longer than the nut to ensure a hole is
-  // through-cut.
-  double overlap = 5.0;
-  double cutterLength = h + 2.0 * overlap;
+  // 2. Create the central hole (unthreaded bore)
+  // The bore diameter should be slightly larger than the minor diameter
+  // to allow the bolt threads to fit
+  double minorD = (params.thread.minorDiameter > 0)
+                      ? params.thread.minorDiameter
+                      : (d - 1.0825 * p_pitch);
 
-  BoltParameters cutterParams = params;
-  cutterParams.shank.totalLength = cutterLength;
-  cutterParams.nut.generate = false;
+  // Add tolerance/clearance to the bore
+  double boreRadius = 0.5 * minorD + tol + threadClearance;
 
-  Bolt cutterBolt(cutterParams);
-  TopoDS_Solid cutterSolid = cutterBolt.Solid();
+  std::cout << "Nut: minorD=" << minorD << " boreRadius=" << boreRadius
+            << std::endl;
 
-  // Scale the cutter bolt by tolerance factor for clearance
-  // The user reported missing holes; scaling ensures the core is larger
-  double scaleFactor = 1.0 + (tol / d);
-  gp_Trsf scaleTransform;
-  scaleTransform.SetScale(gp_Pnt(0.0, 0.0, h / 2.0),
-                          scaleFactor); // Scale around center
-  BRepBuilderAPI_Transform scaleOp(cutterSolid, scaleTransform, Standard_True);
-  cutterSolid = TopoDS::Solid(scaleOp.Shape());
+  // Create bore hole that goes through the entire nut
+  double overlap = 1.0;
+  TopoDS_Solid bore =
+      BRepPrimAPI_MakeCylinder(boreRadius, h + 2.0 * overlap).Solid();
 
-  // Position the cutter so it passes completely through the nut
-  gp_Trsf positionTransform;
-  positionTransform.SetTranslation(gp_Vec(0.0, 0.0, -overlap));
-  BRepBuilderAPI_Transform positionOp(cutterSolid, positionTransform,
-                                      Standard_True);
+  // Position bore to go through nut
+  gp_Trsf boreTransform;
+  boreTransform.SetTranslation(gp_Vec(0.0, 0.0, -overlap));
+  BRepBuilderAPI_Transform borePos(bore, boreTransform, Standard_True);
 
-  // 3. Perform boolean difference
-  std::cout << "Nut: Cutting internal threads..." << std::endl;
+  // Cut the bore from hex
+  std::cout << "Nut: Cutting central bore..." << std::endl;
+  TopoDS_Solid nutWithHole;
   try {
-    body = Cut(hexOuter, positionOp.Shape());
+    nutWithHole = Cut(hexOuter, borePos.Shape());
   } catch (const std::exception &e) {
-    std::cerr << "Nut: Boolean cut failed: " << e.what() << std::endl;
-    // If cut fails, create a simple hole so at least the nut isn't solid hex
-    TopoDS_Solid hole =
-        BRepPrimAPI_MakeCylinder(0.5 * d * scaleFactor, h).Solid();
-    body = Cut(hexOuter, hole);
+    std::cerr << "Nut: Bore cut failed: " << e.what() << std::endl;
+    nutWithHole = hexOuter;
+  }
+
+  // 3. Create internal threads
+  // For internal threads, we create a thread profile that will be added
+  // (fused) to the inner surface of the nut hole
+  std::cout << "Nut: Creating internal thread profile..." << std::endl;
+
+  // Thread profile for internal threads
+  // The thread needs to protrude inward from the bore wall
+  double threadBuildLength = h + 2.0 * p_pitch;
+
+  // Create the helical thread cutter/adder
+  // For internal threads, we use the major diameter and cut inward
+  TopoDS_Solid threadSolid = Thread(minorD, p_pitch, threadBuildLength);
+
+  // Position the thread to align with the nut
+  gp_Trsf threadTransform;
+  threadTransform.SetTranslation(gp_Vec(0.0, 0.0, -p_pitch));
+  BRepBuilderAPI_Transform threadPos(threadSolid, threadTransform,
+                                     Standard_True);
+
+  // Fuse the thread profile to create internal threads
+  std::cout << "Nut: Adding internal thread ridges..." << std::endl;
+  try {
+    BRepAlgoAPI_Fuse threadFuse(nutWithHole, threadPos.Shape());
+    threadFuse.Build();
+    if (threadFuse.IsDone()) {
+      // Extract the solid from fuse result
+      for (TopExp_Explorer ex(threadFuse.Shape(), TopAbs_SOLID); ex.More();
+           ex.Next()) {
+        body = TopoDS::Solid(ex.Current());
+        break;
+      }
+      std::cout << "Nut: Internal threads created successfully" << std::endl;
+    } else {
+      std::cerr << "Nut: Thread fuse failed, using nut without threads"
+                << std::endl;
+      body = nutWithHole;
+    }
+  } catch (const std::exception &e) {
+    std::cerr << "Nut: Thread creation failed: " << e.what() << std::endl;
+    body = nutWithHole;
   }
 
   // 4. Apply edge fillet for smooth edges
-  // SAFE FILLET ALGORITHM: Validate radius against geometry to prevent
-  // corruption
   double filletRadius = params.nut.edgeFilletRadius;
   if (filletRadius > 0.01) {
-    // Clamp fillet radius to safe maximum (10% of nut width across flats)
     double maxSafeRadius = s * 0.1;
     if (filletRadius > maxSafeRadius) {
       std::cout << "Nut Fillet: Clamping radius from " << filletRadius
@@ -109,12 +145,10 @@ Nut::Nut(const BoltParameters &p) : params(p) {
       for (TopExp_Explorer ex(body, TopAbs_EDGE); ex.More(); ex.Next()) {
         TopoDS_Edge edge = TopoDS::Edge(ex.Current());
 
-        // Calculate edge length to validate if fillet is safe
         GProp_GProps edgeProps;
         BRepGProp::LinearProperties(edge, edgeProps);
-        double edgeLength = edgeProps.Mass(); // Length of edge
+        double edgeLength = edgeProps.Mass();
 
-        // Only apply fillet if edge is long enough (at least 4x the radius)
         if (edgeLength > filletRadius * 4.0) {
           fillet.Add(filletRadius, edge);
           edgesAdded++;
@@ -141,6 +175,8 @@ Nut::Nut(const BoltParameters &p) : params(p) {
       std::cerr << "Nut Fillet failed, keeping original geometry" << std::endl;
     }
   }
+
+  std::cout << "Nut: Generation complete" << std::endl;
 }
 
 TopoDS_Solid Nut::Solid() { return body; }

@@ -19,7 +19,13 @@ RUN apt-get update && apt-get install -y \
     occt-misc \
     && rm -rf /var/lib/apt/lists/*
 
+# Build arguments for Coolify/CI
+ARG COOLIFY_URL
+ARG COOLIFY_FQDN
+ARG COOLIFY_BUILD_SECRETS_HASH
+
 WORKDIR /app
+
 
 # Copy C++ source files and Makefile
 COPY Makefile ./

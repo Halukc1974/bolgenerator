@@ -3,6 +3,7 @@
 ## Phase 1: Parameter Definition and Parsing
 - [x] Task: Update `parameters.h` to include new fields in `HeadParameters`, `ShankParameters`, `ThreadParameters`, and `NutParameters` as defined in the spec. [commit: f15f83c]
 - [x] Task: Update `main.cpp` to parse the new CLI arguments and populate the extended parameter structs. [commit: 843f457]
+- [x] Task: Fix compilation errors (Added missing .Solid() calls). [commit: 1d8bcda]
 - [ ] Task: Verify that the project compiles with the new struct definitions (Skipped due to missing local dependencies).
 - [~] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 

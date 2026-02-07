@@ -51,79 +51,65 @@ Nut::Nut(const BoltParameters &p) : params(p) {
     }
   }
 
-  // 2. Create the central hole (unthreaded bore)
-  // The bore diameter should be slightly larger than the minor diameter
-  // to allow the bolt threads to fit
+  // 2. Create a threaded shaft (like a bolt shank) to subtract from the nut
+  // This creates the internal female threads by boolean subtraction
+  double overlap = 2.0;
+  double cutterLength = h + 2.0 * overlap;
+
+  // Calculate minor diameter for thread profile
   double minorD = (params.thread.minorDiameter > 0)
                       ? params.thread.minorDiameter
                       : (d - 1.0825 * p_pitch);
 
-  // Add tolerance/clearance to the bore
-  double boreRadius = 0.5 * minorD + tol + threadClearance;
+  std::cout << "Nut: majorD=" << d << " minorD=" << minorD
+            << " cutterLength=" << cutterLength << std::endl;
 
-  std::cout << "Nut: minorD=" << minorD << " boreRadius=" << boreRadius
-            << std::endl;
+  // Create a plain cylinder with the major diameter (+ clearance for the bolt
+  // to fit)
+  double shaftRadius = 0.5 * d + tol + threadClearance;
+  TopoDS_Solid shaftCylinder =
+      BRepPrimAPI_MakeCylinder(shaftRadius, cutterLength).Solid();
 
-  // Create bore hole that goes through the entire nut
-  double overlap = 1.0;
-  TopoDS_Solid bore =
-      BRepPrimAPI_MakeCylinder(boreRadius, h + 2.0 * overlap).Solid();
+  // Create the helical thread profile to subtract from the shaft
+  // This cuts the thread grooves into our cutter cylinder
+  TopoDS_Solid threadCutter = Thread(minorD, p_pitch, cutterLength + p_pitch);
 
-  // Position bore to go through nut
-  gp_Trsf boreTransform;
-  boreTransform.SetTranslation(gp_Vec(0.0, 0.0, -overlap));
-  BRepBuilderAPI_Transform borePos(bore, boreTransform, Standard_True);
+  // Position thread to start before the shaft
+  gp_Trsf threadOffset;
+  threadOffset.SetTranslation(gp_Vec(0.0, 0.0, -0.5 * p_pitch));
+  BRepBuilderAPI_Transform threadPos(threadCutter, threadOffset, Standard_True);
 
-  // Cut the bore from hex
-  std::cout << "Nut: Cutting central bore..." << std::endl;
-  TopoDS_Solid nutWithHole;
+  // Create the threaded shaft by cutting thread grooves from the cylinder
+  std::cout << "Nut: Creating threaded shaft cutter..." << std::endl;
+  TopoDS_Solid threadedShaft;
   try {
-    nutWithHole = Cut(hexOuter, borePos.Shape());
-  } catch (const std::exception &e) {
-    std::cerr << "Nut: Bore cut failed: " << e.what() << std::endl;
-    nutWithHole = hexOuter;
+    threadedShaft = Cut(shaftCylinder, threadPos.Shape());
+  } catch (...) {
+    std::cerr << "Nut: Thread cut failed, using plain cylinder" << std::endl;
+    threadedShaft = shaftCylinder;
   }
 
-  // 3. Create internal threads
-  // For internal threads, we create a thread profile that will be added
-  // (fused) to the inner surface of the nut hole
-  std::cout << "Nut: Creating internal thread profile..." << std::endl;
+  // Position the threaded shaft to pass through the nut
+  gp_Trsf shaftTransform;
+  shaftTransform.SetTranslation(gp_Vec(0.0, 0.0, -overlap));
+  BRepBuilderAPI_Transform shaftPos(threadedShaft, shaftTransform,
+                                    Standard_True);
 
-  // Thread profile for internal threads
-  // The thread needs to protrude inward from the bore wall
-  double threadBuildLength = h + 2.0 * p_pitch;
-
-  // Create the helical thread cutter/adder
-  // For internal threads, we use the major diameter and cut inward
-  TopoDS_Solid threadSolid = Thread(minorD, p_pitch, threadBuildLength);
-
-  // Position the thread to align with the nut
-  gp_Trsf threadTransform;
-  threadTransform.SetTranslation(gp_Vec(0.0, 0.0, -p_pitch));
-  BRepBuilderAPI_Transform threadPos(threadSolid, threadTransform,
-                                     Standard_True);
-
-  // Fuse the thread profile to create internal threads
-  std::cout << "Nut: Adding internal thread ridges..." << std::endl;
+  // 3. Boolean subtract the threaded shaft from the hex to create internal
+  // threads
+  std::cout << "Nut: Cutting internal threads from hex body..." << std::endl;
   try {
-    BRepAlgoAPI_Fuse threadFuse(nutWithHole, threadPos.Shape());
-    threadFuse.Build();
-    if (threadFuse.IsDone()) {
-      // Extract the solid from fuse result
-      for (TopExp_Explorer ex(threadFuse.Shape(), TopAbs_SOLID); ex.More();
-           ex.Next()) {
-        body = TopoDS::Solid(ex.Current());
-        break;
-      }
-      std::cout << "Nut: Internal threads created successfully" << std::endl;
-    } else {
-      std::cerr << "Nut: Thread fuse failed, using nut without threads"
-                << std::endl;
-      body = nutWithHole;
-    }
+    body = Cut(hexOuter, shaftPos.Shape());
+    std::cout << "Nut: Internal threads created successfully" << std::endl;
   } catch (const std::exception &e) {
-    std::cerr << "Nut: Thread creation failed: " << e.what() << std::endl;
-    body = nutWithHole;
+    std::cerr << "Nut: Boolean cut failed: " << e.what() << std::endl;
+    // Fallback: just cut a plain hole
+    TopoDS_Solid plainHole =
+        BRepPrimAPI_MakeCylinder(shaftRadius, cutterLength).Solid();
+    gp_Trsf holeTransform;
+    holeTransform.SetTranslation(gp_Vec(0.0, 0.0, -overlap));
+    BRepBuilderAPI_Transform holePos(plainHole, holeTransform, Standard_True);
+    body = Cut(hexOuter, holePos.Shape());
   }
 
   // 4. Apply edge fillet for smooth edges
@@ -163,13 +149,7 @@ Nut::Nut(const BoltParameters &p) : params(p) {
         if (fillet.IsDone()) {
           body = TopoDS::Solid(fillet.Shape());
           std::cout << "Nut: Edge fillet applied successfully" << std::endl;
-        } else {
-          std::cerr << "Nut Fillet: Build incomplete, keeping original geometry"
-                    << std::endl;
         }
-      } else {
-        std::cout << "Nut Fillet: No suitable edges found, skipping"
-                  << std::endl;
       }
     } catch (...) {
       std::cerr << "Nut Fillet failed, keeping original geometry" << std::endl;

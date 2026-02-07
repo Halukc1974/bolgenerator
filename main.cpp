@@ -8,12 +8,14 @@
 #include <vector>
 
 int main(int argc, char *argv[]) {
-  // New argument list (23 arguments + 1 for program name)
-  if (argc < 24) {
+  // New argument list (30 arguments + 1 for program name)
+  if (argc < 31) {
     std::cerr << "Usage: " << argv[0]
               << " <name> <headType> <s> <k> <dw> <c> <r> <socketS> <socketD> "
                  "<d> <L> <ls> <bodyTol> <threadD> <P> <minorD> <genNut> "
-                 "<nutS> <nutH> <nutDw> <nutTol> <boltFillet> <nutFillet>"
+                 "<nutS> <nutH> <nutDw> <nutTol> <boltFillet> <nutFillet> "
+                 "<topFillet> <vChamfer> <transFillet> <crestR> <nutChamfer> "
+                 "<threadClear> <tolClass>"
               << std::endl;
     return 1;
   }
@@ -54,6 +56,15 @@ int main(int argc, char *argv[]) {
     // Edge smoothing
     p.shank.edgeFilletRadius = atof(argv[i++]);
     p.nut.edgeFilletRadius = atof(argv[i++]);
+
+    // New Parameters
+    p.head.topFilletRadius = atof(argv[i++]);
+    p.head.verticalChamfer = atof(argv[i++]);
+    p.shank.transitionFilletRadius = atof(argv[i++]);
+    p.thread.crestRadius = atof(argv[i++]);
+    p.nut.chamferAngle = atof(argv[i++]);
+    p.nut.threadClearance = atof(argv[i++]);
+    p.material.toleranceClass = argv[i++]; // string
 
     std::cout << "Starting generation for " << name << "..." << std::endl;
 

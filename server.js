@@ -64,7 +64,15 @@ app.post('/generate', (req, res) => {
         p.nutWasherFace || 0,
         p.nutTolerance || 0.15,
         clampedBoltFillet,  // Safe bolt edge fillet
-        clampedNutFillet    // Safe nut edge fillet
+        clampedNutFillet,    // Safe nut edge fillet
+        // New Parameters
+        p.topFilletRadius || 0,
+        p.verticalChamfer || 0,
+        p.transitionFilletRadius || 0,
+        p.crestRadius || 0,
+        p.chamferAngle || 30.0,
+        p.threadClearance || 0,
+        p.toleranceClass || "6g"
     ];
 
     const command = `./scim_bolts ${args.join(' ')}`;

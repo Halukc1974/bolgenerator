@@ -17,6 +17,8 @@ struct HeadParameters {
   double washerFaceDiameter;    // dw
   double washerFaceThickness;   // c
   double underheadFilletRadius; // r
+  double topFilletRadius;       // New: Radius of the fillet on the top edge
+  double verticalChamfer;       // New: Chamfer size for vertical hex edges
   double socketSize;            // for socket head
   double socketDepth;           // for socket head
 };
@@ -27,6 +29,7 @@ struct ShankParameters {
   double gripLength;       // ls (unthreaded part)
   double bodyTolerance;    // tolerance on diameter
   double edgeFilletRadius; // radius for smoothing all edges
+  double transitionFilletRadius; // New: Specific radius for head-shank transition
 };
 
 struct ThreadParameters {
@@ -36,6 +39,7 @@ struct ThreadParameters {
   double minorDiameter; // d3
   double pitchDiameter; // d2
   double rootRadius;    // R
+  double crestRadius;   // New: Radius of the thread crest
   double runout;        // thread runout length
 };
 
@@ -45,14 +49,17 @@ struct NutParameters {
   double height;
   double washerFaceDiameter;
   double countersinkAngle;
+  double chamferAngle;     // New: Angle of chamfer on faces
   double tolerance;        // clearance between bolt and nut
+  double threadClearance;  // New: Specific clearance for internal thread
   double edgeFilletRadius; // radius for smoothing nut edges
 };
 
 struct MaterialParameters {
-  std::string propertyClass; // e.g., "8.8"
+  std::string propertyClass; // e.g., "8.8" (Strength Grade)
   std::string materialType;  // e.g., "Steel"
   std::string coating;       // e.g., "Zinc"
+  std::string toleranceClass; // New: e.g., "6g", "6H"
 };
 
 struct BoltParameters {

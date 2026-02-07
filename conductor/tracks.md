@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Implement comprehensive mechanical and geometric parameters (including fillets/chamfers) for fully customizable bolt and nut generation.**
+- [~] **Track: Implement comprehensive mechanical and geometric parameters (including fillets/chamfers) for fully customizable bolt and nut generation.**
   *Link: [./tracks/parameters_20260207/](./tracks/parameters_20260207/)*

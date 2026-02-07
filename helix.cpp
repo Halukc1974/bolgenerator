@@ -27,7 +27,7 @@ TopoDS_Solid Helix(TopoDS_Wire sketch, double diameter, double pitch,
 
   // Build a solid trace of the 2D path.
   auto threadPipe =
-      BRepOffsetAPI_MakePipeShell(BRepBuilderAPI_MakeWire(toolPath));
+      BRepOffsetAPI_MakePipeShell(BRepBuilderAPI_MakeWire(toolPath).Wire());
   threadPipe.Add(sketch);
   threadPipe.SetMode(gp_Vec(0, 0, 1));
   threadPipe.Build();

@@ -43,5 +43,5 @@ TopoDS_Solid Thread(double diameter, // Minor Diameter
                  .Edge());
 
   // Make the helix slightly longer than requested to prevent cap-face issues
-  return Helix(wire, diameter, pitch, length);
+  return Helix(wire.Wire(), diameter, pitch, length);
 }

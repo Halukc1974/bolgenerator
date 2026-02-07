@@ -1,8 +1,8 @@
 # Implementation Plan - Track: parameters_20260207
 
 ## Phase 1: Parameter Definition and Parsing
-- [ ] Task: Update `parameters.h` to include new fields in `HeadParameters`, `ShankParameters`, `ThreadParameters`, and `NutParameters` as defined in the spec.
-- [ ] Task: Update `main.cpp` to parse the new CLI arguments and populate the extended parameter structs.
+- [x] Task: Update `parameters.h` to include new fields in `HeadParameters`, `ShankParameters`, `ThreadParameters`, and `NutParameters` as defined in the spec. [commit: f15f83c]
+- [~] Task: Update `main.cpp` to parse the new CLI arguments and populate the extended parameter structs.
 - [ ] Task: Verify that the project compiles with the new struct definitions (even if logic isn't used yet).
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 

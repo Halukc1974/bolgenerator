@@ -259,7 +259,7 @@ Bolt::Bolt(const BoltParameters &p) : params(p) {
     if (params.head.type == HeadType::HEX) {
       head = Hexagon(s, k);
     } else if (params.head.type == HeadType::SOCKET_CAP) {
-      head = BRepPrimAPI_MakeCylinder(0.5 * params.head.widthAcrossFlats, k);
+      head = BRepPrimAPI_MakeCylinder(0.5 * params.head.widthAcrossFlats, k).Solid();
       TopoDS_Solid socket =
           Hexagon(params.head.socketSize, params.head.socketDepth);
       gp_Trsf socketOffset;
@@ -268,7 +268,7 @@ Bolt::Bolt(const BoltParameters &p) : params(p) {
       head = Cut(head, BRepBuilderAPI_Transform(socket, socketOffset).Shape());
     } else if (params.head.type == HeadType::FLAT ||
                params.head.type == HeadType::COUNTERSUNK) {
-      head = BRepPrimAPI_MakeCylinder(0.5 * s, k);
+      head = BRepPrimAPI_MakeCylinder(0.5 * s, k).Solid();
     } else {
       head = Hexagon(s, k);
     }
@@ -278,7 +278,7 @@ Bolt::Bolt(const BoltParameters &p) : params(p) {
         params.head.washerFaceThickness > 0) {
       TopoDS_Solid washer =
           BRepPrimAPI_MakeCylinder(0.5 * params.head.washerFaceDiameter,
-                                   params.head.washerFaceThickness);
+                                   params.head.washerFaceThickness).Solid();
       // Washer face is usually at the bottom of the head
       BRepAlgoAPI_Fuse washerFuse(head, washer);
       washerFuse.Build();

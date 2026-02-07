@@ -40,7 +40,7 @@ Nut::Nut(const BoltParameters &p) : params(p) {
     // Assume standard washer face thickness of 10% of nut height or 0.5mm
     double wft = 0.5;
     TopoDS_Solid washer =
-        BRepPrimAPI_MakeCylinder(0.5 * params.nut.washerFaceDiameter, wft);
+        BRepPrimAPI_MakeCylinder(0.5 * params.nut.washerFaceDiameter, wft).Solid();
     BRepAlgoAPI_Fuse washerFuse(hexOuter, washer);
     washerFuse.Build();
     hexOuter = TopoDS::Solid(washerFuse.Shape());

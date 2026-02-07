@@ -5,6 +5,7 @@
 - [x] Task: Update `main.cpp` to parse the new CLI arguments and populate the extended parameter structs. [commit: 843f457]
 - [x] Task: Fix compilation errors (Added missing .Solid() calls). [commit: 1d8bcda]
 - [x] Task: Fix implicit conversion errors (Added missing .Wire() calls). [commit: bf5886a]
+- [x] Task: Fix implicit conversion errors for Face (Added missing .Face() calls). [commit: 74b1036]
 - [ ] Task: Verify that the project compiles with the new struct definitions (Skipped due to missing local dependencies).
 - [~] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 

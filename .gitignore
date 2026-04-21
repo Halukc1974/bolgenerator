@@ -1,0 +1,59 @@
+# ─── Node.js ─────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.env
+.env.local
+
+# ─── C++ Build Artifacts ─────────────────
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Project-specific binary
+scim_bolts
+
+# ─── CAD / Runtime Output ────────────────
+# Generated 3D files (runtime output, not source)
+Tests/*.brep
+Tests/*.stl
+Tests/*.step
+Tests/*.stp
+Tests/*.iges
+Tests/*.igs
+
+# Keep the Tests directory structure but ignore contents
+!Tests/.gitkeep
+
+# ─── Logs ────────────────────────────────
+*.log
+logs/
+
+# ─── OS / Editor ─────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+*.iml
+
+# ─── Python / FreeCAD cache (MeshPart) ───
+__pycache__/
+*.pyc
+*.pyo
+
+# ─── Docker ──────────────────────────────
+# Keep Dockerfile and docker-compose.yml tracked
+# but ignore local overrides
+docker-compose.override.yml
+
+# ─── CMake build dir (future) ────────────
+build/
+cmake-build-*/

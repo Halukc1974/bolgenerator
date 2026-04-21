@@ -2,13 +2,21 @@
 #include "export.h"
 #include "nut.h"
 #include "parameters.h"
+#include <BRepGProp.hxx>
+#include <GProp_GProps.hxx>
 #include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
 
+static double SolidVolumeMm3(const TopoDS_Shape &shape) {
+  GProp_GProps props;
+  BRepGProp::VolumeProperties(shape, props);
+  return props.Mass(); // volume in mm^3 (OCCT "Mass" = integral of 1 over shape)
+}
+
 int main(int argc, char *argv[]) {
-  // New argument list (23 arguments + 1 for program name)
+  // 23 arguments + 1 for program name
   if (argc < 24) {
     std::cerr << "Usage: " << argv[0]
               << " <name> <headType> <s> <k> <dw> <c> <r> <socketS> <socketD> "
@@ -57,25 +65,34 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Starting generation for " << name << "..." << std::endl;
 
-    // Generate Bolt
+    // ── Generate Bolt ───────────────────────────────────────────────────
     Bolt bolt(p);
-    std::string brepPath = std::string("Tests/").append(name).append(".brep");
-    std::string stlPath = std::string("Tests/").append(name).append(".stl");
+    const std::string brepPath = "Tests/" + name + ".brep";
+    const std::string stlPath = "Tests/" + name + ".stl";
+    const std::string stepPath = "Tests/" + name + ".step";
 
     ExportBRep(bolt.Solid(), brepPath.c_str());
     ExportSTL(bolt.Solid(), stlPath.c_str());
+    ExportSTEP(bolt.Solid(), stepPath.c_str());
+
+    const double boltVolume = SolidVolumeMm3(bolt.Solid());
+    // This line is parsed by server.js → response.stats.volume_mm3
+    std::cout << "Bolt Volume: " << boltVolume << " mm^3" << std::endl;
     std::cout << "Bolt exported: " << brepPath << std::endl;
 
-    // Generate Nut if requested
+    // ── Generate Nut (if requested) ─────────────────────────────────────
     if (p.nut.generate) {
       Nut nut(p);
-      std::string nutBrepPath =
-          std::string("Tests/").append(name).append("_nut.brep");
-      std::string nutStlPath =
-          std::string("Tests/").append(name).append("_nut.stl");
+      const std::string nutBrepPath = "Tests/" + name + "_nut.brep";
+      const std::string nutStlPath = "Tests/" + name + "_nut.stl";
+      const std::string nutStepPath = "Tests/" + name + "_nut.step";
 
       ExportBRep(nut.Solid(), nutBrepPath.c_str());
       ExportSTL(nut.Solid(), nutStlPath.c_str());
+      ExportSTEP(nut.Solid(), nutStepPath.c_str());
+
+      const double nutVolume = SolidVolumeMm3(nut.Solid());
+      std::cout << "Nut Volume: " << nutVolume << " mm^3" << std::endl;
       std::cout << "Nut exported: " << nutBrepPath << std::endl;
     }
 

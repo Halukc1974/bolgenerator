@@ -4,6 +4,11 @@ FROM ubuntu:22.04 AS builder
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Disable apt by-hash (fixes transient mirror hash mismatch on arm64/amd64)
+RUN echo 'Acquire::By-Hash "false";' > /etc/apt/apt.conf.d/99disable-by-hash \
+ && echo 'Acquire::Retries "5";'   >> /etc/apt/apt.conf.d/99disable-by-hash \
+ && echo 'Acquire::http::Pipeline-Depth "0";' >> /etc/apt/apt.conf.d/99disable-by-hash
+
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -33,6 +38,11 @@ FROM ubuntu:22.04
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Disable apt by-hash (fixes transient mirror hash mismatch on arm64/amd64)
+RUN echo 'Acquire::By-Hash "false";' > /etc/apt/apt.conf.d/99disable-by-hash \
+ && echo 'Acquire::Retries "5";'   >> /etc/apt/apt.conf.d/99disable-by-hash \
+ && echo 'Acquire::http::Pipeline-Depth "0";' >> /etc/apt/apt.conf.d/99disable-by-hash
 
 # Install Node.js and OCCT runtime libraries
 RUN apt-get update && apt-get install -y \

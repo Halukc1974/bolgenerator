@@ -237,6 +237,20 @@
         </div>
 
         <form id="boltForm">
+            <!-- 0. Preset Section -->
+            <div class="section">
+                <div class="section-header">0. Standard Preset <span>▼</span></div>
+                <div class="section-content">
+                    <div class="form-group">
+                        <label>Quick-load ISO standard sizes</label>
+                        <select id="presetSelect">
+                            <option value="">— Custom (no preset) —</option>
+                        </select>
+                        <span style="font-size: 0.65rem; color: var(--text-muted);">Fills form with ISO 4014/4762 dimensions. You can still adjust after loading.</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 1. Head Section -->
             <div class="section">
                 <div class="section-header">1. Head Geometry <span>▼</span></div>
@@ -348,6 +362,24 @@
                         <input type="number" name="minorDiameter" step="0.1" value="0">
                         <small style="font-size: 0.7rem; color: var(--text-muted);">Enter 0 for ISO standard
                             auto-calc</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3b. Material Section -->
+            <div class="section">
+                <div class="section-header">3b. Material <span>▼</span></div>
+                <div class="section-content">
+                    <div class="form-group">
+                        <label>Material (for mass estimate)</label>
+                        <select name="material" id="materialSelect">
+                            <option value="steel" data-density="7.85">Carbon Steel (7.85 g/cm³)</option>
+                            <option value="stainless" data-density="8.00">Stainless Steel 304 (8.00 g/cm³)</option>
+                            <option value="aluminum" data-density="2.70">Aluminum 6061 (2.70 g/cm³)</option>
+                            <option value="brass" data-density="8.73">Brass (8.73 g/cm³)</option>
+                            <option value="titanium" data-density="4.51">Titanium Grade 5 (4.51 g/cm³)</option>
+                            <option value="nylon" data-density="1.14">Nylon 6/6 (1.14 g/cm³)</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -541,9 +573,52 @@
                 });
                 const resData = await res.json();
                 if (resData.success) {
-                    msg.textContent = "Complete!";
-                    links.innerHTML = `<a href="${resData.boltStl}" class="dl-link">Bolt STL</a>`;
-                    if (resData.nutStl) links.innerHTML += `<a href="${resData.nutStl}" class="dl-link">Nut STL</a>`;
+                    const matSelect = document.getElementById('materialSelect');
+                    const density = parseFloat(matSelect.selectedOptions[0].dataset.density) || 7.85;
+                    const matName = matSelect.selectedOptions[0].text.split(' (')[0];
+
+                    const boltVol = resData.stats?.volume_mm3 ?? null;
+                    const nutVol  = resData.nutStats?.volume_mm3 ?? null;
+                    // mass(g) = volume(cm³) × density(g/cm³); cm³ = mm³ / 1000
+                    const boltMassG = boltVol != null ? (boltVol / 1000) * density : null;
+                    const nutMassG  = nutVol  != null ? (nutVol  / 1000) * density : null;
+
+                    // Build stats display with safe DOM methods (no innerHTML → no XSS)
+                    msg.textContent = '';
+                    const title = document.createElement('strong');
+                    title.textContent = 'Complete!';
+                    msg.appendChild(title);
+                    const statsBox = document.createElement('small');
+                    statsBox.style.color = 'var(--text-muted)';
+                    statsBox.style.display = 'block';
+                    statsBox.style.marginTop = '4px';
+                    if (boltVol != null) {
+                        statsBox.appendChild(document.createTextNode(
+                            `Bolt: ${boltVol.toFixed(1)} mm³ · ${boltMassG.toFixed(2)} g (${matName})`));
+                        statsBox.appendChild(document.createElement('br'));
+                    }
+                    if (nutVol != null) {
+                        statsBox.appendChild(document.createTextNode(
+                            `Nut: ${nutVol.toFixed(1)} mm³ · ${nutMassG.toFixed(2)} g`));
+                    }
+                    msg.appendChild(statsBox);
+
+                    // Build download links with createElement (safe from XSS)
+                    links.textContent = '';
+                    const addDl = (href, text) => {
+                        if (!href) return;
+                        const a = document.createElement('a');
+                        a.href = href;
+                        a.className = 'dl-link';
+                        a.textContent = text;
+                        links.appendChild(a);
+                    };
+                    addDl(resData.boltStl,  'Bolt STL');
+                    addDl(resData.boltBrep, 'BRep');
+                    addDl(resData.boltStep, 'STEP');
+                    addDl(resData.nutStl,   'Nut STL');
+                    addDl(resData.nutStep,  'Nut STEP');
+
                     loadSTL(resData.boltStl);
                     if (resData.nutStl) loadSTL(resData.nutStl, true);
                 } else {
@@ -553,6 +628,52 @@
             finally { btn.disabled = false; btn.textContent = "GENERATE 3D MODEL"; }
         });
 
+        // ── Preset loader ───────────────────────────────────────────
+        async function loadPresets() {
+            try {
+                const res = await fetch('/presets.json');
+                if (!res.ok) return;
+                const data = await res.json();
+                const select = document.getElementById('presetSelect');
+                for (const preset of data.presets) {
+                    const opt = document.createElement('option');
+                    opt.value = preset.id;
+                    opt.textContent = preset.label;
+                    select.appendChild(opt);
+                }
+                select.addEventListener('change', e => {
+                    const chosen = data.presets.find(p => p.id === e.target.value);
+                    if (!chosen) return;
+                    applyPreset(chosen);
+                });
+            } catch (err) {
+                console.warn('Preset load failed:', err);
+            }
+        }
+
+        function applyPreset(p) {
+            const set = (name, val) => {
+                const el = document.getElementsByName(name)[0];
+                if (el && val !== undefined) el.value = val;
+            };
+            set('headType', p.headType);
+            set('widthAcrossFlats', p.s);
+            set('headHeight', p.k);
+            set('underheadFilletRadius', p.r);
+            set('nominalDiameter', p.d);
+            set('majorDiameter', p.d);
+            set('threadPitch', p.pitch);
+            set('minorDiameter', 0);
+            set('socketSize', p.socketS ?? 0);
+            set('socketDepth', p.socketD ?? 0);
+            set('nutAcrossFlats', p.nutS);
+            set('nutHeight', p.nutH);
+            // Trigger headType change so socket fields show/hide correctly
+            document.getElementById('headType').dispatchEvent(new Event('change'));
+            validateForm();
+        }
+
+        loadPresets();
         init3D();
         window.addEventListener('resize', () => {
             renderer.setSize(document.querySelector('.viewport').clientWidth, window.innerHeight);

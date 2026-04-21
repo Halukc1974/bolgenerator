@@ -37,7 +37,6 @@ Nut::Nut(const BoltParameters &p) : params(p) {
 
   // Add Washer Face if specified
   if (params.nut.washerFaceDiameter > 0) {
-    // Assume standard washer face thickness of 10% of nut height or 0.5mm
     double wft = 0.5;
     TopoDS_Solid washer =
         BRepPrimAPI_MakeCylinder(0.5 * params.nut.washerFaceDiameter, wft);
@@ -46,53 +45,61 @@ Nut::Nut(const BoltParameters &p) : params(p) {
     hexOuter = TopoDS::Solid(washerFuse.Shape());
   }
 
-  // 2. Create cutter bolt
-  // We use a simplified bolt as a cutter.
-  // It MUST be significantly longer than the nut to ensure a hole is
-  // through-cut.
-  double overlap = 5.0;
-  double cutterLength = h + 2.0 * overlap;
+  // 2. Build the internal-thread cutter as a "virtual bolt" with
+  //    DIAMETER-ONLY tolerance offset. Pitch is IDENTICAL to the user's bolt
+  //    so they actually mate — the previous scale-based approach also scaled
+  //    pitch and produced geometrically incompatible threads.
+  const double overlap = 5.0;
+  const double cutterLength = h + 2.0 * overlap;
 
   BoltParameters cutterParams = params;
   cutterParams.shank.totalLength = cutterLength;
+  cutterParams.shank.gripLength = 0;          // fully threaded cutter
+  cutterParams.shank.bodyTolerance = 0;       // no body-tolerance subtraction
+  cutterParams.shank.edgeFilletRadius = 0;    // no edge fillet on the cutter
+  cutterParams.head.underheadFilletRadius = 0;// no underhead fillet on cutter
+  cutterParams.head.widthAcrossFlats = 0.1;   // minimal head so Head() is cheap
+  cutterParams.head.height = 0.1;             // head will be trimmed off anyway
+  cutterParams.head.type = HeadType::HEX;     // simplest head
   cutterParams.nut.generate = false;
 
+  // Enlarge diameters by tolerance (clearance on radius) — keep pitch.
+  cutterParams.thread.majorDiameter = d + tol;
+  cutterParams.thread.minorDiameter =
+      (params.thread.minorDiameter > 0 ? params.thread.minorDiameter
+                                       : (d - 1.0825 * p_pitch)) +
+      tol;
+  cutterParams.shank.nominalDiameter = d + tol;
+
+  std::cout << "Nut: Building diameter-offset cutter (d=" << (d + tol)
+            << ", pitch=" << p_pitch << ", len=" << cutterLength << ")"
+            << std::endl;
   Bolt cutterBolt(cutterParams);
   TopoDS_Solid cutterSolid = cutterBolt.Solid();
 
-  // Scale the cutter bolt by tolerance factor for clearance
-  // The user reported missing holes; scaling ensures the core is larger
-  double scaleFactor = 1.0 + (tol / d);
-  gp_Trsf scaleTransform;
-  scaleTransform.SetScale(gp_Pnt(0.0, 0.0, h / 2.0),
-                          scaleFactor); // Scale around center
-  BRepBuilderAPI_Transform scaleOp(cutterSolid, scaleTransform, Standard_True);
-  cutterSolid = TopoDS::Solid(scaleOp.Shape());
-
-  // Position the cutter so it passes completely through the nut
+  // Position cutter so it passes completely through the nut
   gp_Trsf positionTransform;
   positionTransform.SetTranslation(gp_Vec(0.0, 0.0, -overlap));
-  BRepBuilderAPI_Transform positionOp(cutterSolid, positionTransform,
-                                      Standard_True);
+  TopoDS_Shape cutterShape =
+      BRepBuilderAPI_Transform(cutterSolid, positionTransform).Shape();
 
   // 3. Perform boolean difference
   std::cout << "Nut: Cutting internal threads..." << std::endl;
   try {
-    body = Cut(hexOuter, positionOp.Shape());
+    body = Cut(hexOuter, cutterShape);
   } catch (const std::exception &e) {
     std::cerr << "Nut: Boolean cut failed: " << e.what() << std::endl;
-    // If cut fails, create a simple hole so at least the nut isn't solid hex
+    // Fallback: plain cylindrical hole so at least the nut isn't solid hex
     TopoDS_Solid hole =
-        BRepPrimAPI_MakeCylinder(0.5 * d * scaleFactor, h).Solid();
+        BRepPrimAPI_MakeCylinder(0.5 * (d + tol), h).Solid();
     body = Cut(hexOuter, hole);
   }
 
-  // 4. Apply edge fillet for smooth edges
-  // SAFE FILLET ALGORITHM: Validate radius against geometry to prevent
-  // corruption
+  // 4. Apply edge fillet for smooth edges.
+  //    Safety: only fillet OUTER hex edges (avoid internal thread edges that
+  //    number in the hundreds and crash OCCT's filleter).
   double filletRadius = params.nut.edgeFilletRadius;
   if (filletRadius > 0.01) {
-    // Clamp fillet radius to safe maximum (10% of nut width across flats)
     double maxSafeRadius = s * 0.1;
     if (filletRadius > maxSafeRadius) {
       std::cout << "Nut Fillet: Clamping radius from " << filletRadius
@@ -106,22 +113,30 @@ Nut::Nut(const BoltParameters &p) : params(p) {
       BRepFilletAPI_MakeFillet fillet(body);
       int edgesAdded = 0;
 
+      // Only consider edges whose axial extent lies on the top or bottom
+      // face of the nut (|z_center - 0| < eps OR |z_center - h| < eps).
+      // This avoids picking up the ~80+ helical thread edges that make
+      // OCCT's filleter unstable and caused a segfault previously.
+      const double zTol = 0.01;
       for (TopExp_Explorer ex(body, TopAbs_EDGE); ex.More(); ex.Next()) {
         TopoDS_Edge edge = TopoDS::Edge(ex.Current());
 
-        // Calculate edge length to validate if fillet is safe
         GProp_GProps edgeProps;
         BRepGProp::LinearProperties(edge, edgeProps);
-        double edgeLength = edgeProps.Mass(); // Length of edge
+        double edgeLength = edgeProps.Mass();
+        double zCenter = edgeProps.CentreOfMass().Z();
 
-        // Only apply fillet if edge is long enough (at least 4x the radius)
-        if (edgeLength > filletRadius * 4.0) {
+        const bool onTopOrBottom =
+            (std::abs(zCenter - 0.0) < zTol) || (std::abs(zCenter - h) < zTol);
+
+        // Require long-enough edge AND top/bottom location
+        if (edgeLength > filletRadius * 4.0 && onTopOrBottom) {
           fillet.Add(filletRadius, edge);
           edgesAdded++;
         }
       }
 
-      std::cout << "Nut Fillet: Added to " << edgesAdded << " edges"
+      std::cout << "Nut Fillet: Added to " << edgesAdded << " top/bottom edges"
                 << std::endl;
 
       if (edgesAdded > 0) {

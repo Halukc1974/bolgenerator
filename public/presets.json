@@ -1,0 +1,123 @@
+{
+  "_meta": {
+    "description": "ISO standard metric fastener presets (ISO 4014/4017/4032/4762)",
+    "units": "mm",
+    "reference": "ISO 724 / ISO 898-1 / ISO 4762"
+  },
+  "presets": [
+    {
+      "id": "M3_hex",        "label": "M3 Hex (ISO 4014)",
+      "headType": 0, "d": 3,  "pitch": 0.5,  "s": 5.5,  "k": 2.0, "r": 0.2,
+      "nutS": 5.5,  "nutH": 2.4
+    },
+    {
+      "id": "M4_hex",        "label": "M4 Hex (ISO 4014)",
+      "headType": 0, "d": 4,  "pitch": 0.7,  "s": 7.0,  "k": 2.8, "r": 0.2,
+      "nutS": 7.0,  "nutH": 3.2
+    },
+    {
+      "id": "M5_hex",        "label": "M5 Hex (ISO 4014)",
+      "headType": 0, "d": 5,  "pitch": 0.8,  "s": 8.0,  "k": 3.5, "r": 0.2,
+      "nutS": 8.0,  "nutH": 4.0
+    },
+    {
+      "id": "M6_hex",        "label": "M6 Hex (ISO 4014)",
+      "headType": 0, "d": 6,  "pitch": 1.0,  "s": 10.0, "k": 4.0, "r": 0.25,
+      "nutS": 10.0, "nutH": 5.0
+    },
+    {
+      "id": "M8_hex",        "label": "M8 Hex (ISO 4014)",
+      "headType": 0, "d": 8,  "pitch": 1.25, "s": 13.0, "k": 5.3, "r": 0.4,
+      "nutS": 13.0, "nutH": 6.5
+    },
+    {
+      "id": "M10_hex",       "label": "M10 Hex (ISO 4014)",
+      "headType": 0, "d": 10, "pitch": 1.5,  "s": 16.0, "k": 6.4, "r": 0.4,
+      "nutS": 16.0, "nutH": 8.0
+    },
+    {
+      "id": "M12_hex",       "label": "M12 Hex (ISO 4014)",
+      "headType": 0, "d": 12, "pitch": 1.75, "s": 18.0, "k": 7.5, "r": 0.6,
+      "nutS": 18.0, "nutH": 10.0
+    },
+    {
+      "id": "M14_hex",       "label": "M14 Hex (ISO 4014)",
+      "headType": 0, "d": 14, "pitch": 2.0,  "s": 21.0, "k": 8.8, "r": 0.6,
+      "nutS": 21.0, "nutH": 11.0
+    },
+    {
+      "id": "M16_hex",       "label": "M16 Hex (ISO 4014)",
+      "headType": 0, "d": 16, "pitch": 2.0,  "s": 24.0, "k": 10.0, "r": 0.6,
+      "nutS": 24.0, "nutH": 13.0
+    },
+    {
+      "id": "M20_hex",       "label": "M20 Hex (ISO 4014)",
+      "headType": 0, "d": 20, "pitch": 2.5,  "s": 30.0, "k": 12.5, "r": 0.8,
+      "nutS": 30.0, "nutH": 16.0
+    },
+    {
+      "id": "M24_hex",       "label": "M24 Hex (ISO 4014)",
+      "headType": 0, "d": 24, "pitch": 3.0,  "s": 36.0, "k": 15.0, "r": 0.8,
+      "nutS": 36.0, "nutH": 19.0
+    },
+    {
+      "id": "M30_hex",       "label": "M30 Hex (ISO 4014)",
+      "headType": 0, "d": 30, "pitch": 3.5,  "s": 46.0, "k": 18.7, "r": 1.0,
+      "nutS": 46.0, "nutH": 24.0
+    },
+    {
+      "id": "M3_shcs",       "label": "M3 Socket Cap (ISO 4762)",
+      "headType": 1, "d": 3,  "pitch": 0.5,  "s": 5.5,  "k": 3.0,  "r": 0.2,
+      "socketS": 2.5, "socketD": 1.5,
+      "nutS": 5.5,  "nutH": 2.4
+    },
+    {
+      "id": "M4_shcs",       "label": "M4 Socket Cap (ISO 4762)",
+      "headType": 1, "d": 4,  "pitch": 0.7,  "s": 7.0,  "k": 4.0,  "r": 0.2,
+      "socketS": 3.0, "socketD": 2.0,
+      "nutS": 7.0,  "nutH": 3.2
+    },
+    {
+      "id": "M5_shcs",       "label": "M5 Socket Cap (ISO 4762)",
+      "headType": 1, "d": 5,  "pitch": 0.8,  "s": 8.5,  "k": 5.0,  "r": 0.2,
+      "socketS": 4.0, "socketD": 2.5,
+      "nutS": 8.0,  "nutH": 4.0
+    },
+    {
+      "id": "M6_shcs",       "label": "M6 Socket Cap (ISO 4762)",
+      "headType": 1, "d": 6,  "pitch": 1.0,  "s": 10.0, "k": 6.0,  "r": 0.25,
+      "socketS": 5.0, "socketD": 3.0,
+      "nutS": 10.0, "nutH": 5.0
+    },
+    {
+      "id": "M8_shcs",       "label": "M8 Socket Cap (ISO 4762)",
+      "headType": 1, "d": 8,  "pitch": 1.25, "s": 13.0, "k": 8.0,  "r": 0.4,
+      "socketS": 6.0, "socketD": 4.0,
+      "nutS": 13.0, "nutH": 6.5
+    },
+    {
+      "id": "M10_shcs",      "label": "M10 Socket Cap (ISO 4762)",
+      "headType": 1, "d": 10, "pitch": 1.5,  "s": 16.0, "k": 10.0, "r": 0.4,
+      "socketS": 8.0, "socketD": 5.0,
+      "nutS": 16.0, "nutH": 8.0
+    },
+    {
+      "id": "M12_shcs",      "label": "M12 Socket Cap (ISO 4762)",
+      "headType": 1, "d": 12, "pitch": 1.75, "s": 18.0, "k": 12.0, "r": 0.6,
+      "socketS": 10.0, "socketD": 6.0,
+      "nutS": 18.0, "nutH": 10.0
+    },
+    {
+      "id": "M16_shcs",      "label": "M16 Socket Cap (ISO 4762)",
+      "headType": 1, "d": 16, "pitch": 2.0,  "s": 24.0, "k": 16.0, "r": 0.6,
+      "socketS": 14.0, "socketD": 8.0,
+      "nutS": 24.0, "nutH": 13.0
+    },
+    {
+      "id": "M20_shcs",      "label": "M20 Socket Cap (ISO 4762)",
+      "headType": 1, "d": 20, "pitch": 2.5,  "s": 30.0, "k": 20.0, "r": 0.8,
+      "socketS": 17.0, "socketD": 10.0,
+      "nutS": 30.0, "nutH": 16.0
+    }
+  ]
+}
